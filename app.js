@@ -177,9 +177,9 @@ async function generarPDFPoda() {
     const fVehiculo = await leerFoto('f-vehiculo');
 
     if (fGrupo) {
-        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 15, 93);
-        doc.addImage(fGrupo, 'JPEG', 15, 95, 180, 85);
-        doc.rect(15, 95, 180, 85);
+        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 25, 93);
+        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 85);
+        doc.rect(25, 95, 160, 85);
     }
    if (fVehiculo) {
         // Título de la foto
@@ -188,7 +188,7 @@ async function generarPDFPoda() {
 
         // Dimensiones para el formato Vertical (Retrato)
         const vFotoW = 90; // Ancho reducido (mm)
-        const vFotoH = 100; // Alto aumentado (mm)
+        const vFotoH = 85; // Alto aumentado (mm)
         const centerX = (210 - vFotoW) / 2; // Cálculo para centrar en la hoja
 
         // Insertar la imagen y el borde (rectángulo)
