@@ -177,14 +177,14 @@ async function generarPDFPoda() {
     const fVehiculo = await leerFoto('f-vehiculo');
 
     if (fGrupo) {
-        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 105, 93);
+        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 93);
         doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
         doc.rect(25, 95, 160, 95);
     }
    if (fVehiculo) {
         // Título de la foto
         doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 193, { align: "center" }); // Título centrado
+        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" }); // Título centrado
 
         // Dimensiones para el formato Vertical (Retrato)
         const vFotoW = 80; // Ancho reducido (mm)
@@ -192,8 +192,8 @@ async function generarPDFPoda() {
         const centerX = (210 - vFotoW) / 2; // Cálculo para centrar en la hoja
 
         // Insertar la imagen y el borde (rectángulo)
-        doc.addImage(fVehiculo, 'JPEG', centerX, 195, vFotoW, vFotoH);
-        doc.rect(centerX, 195, vFotoW, vFotoH); // Borde ajustado a la nueva medida
+        doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
+        doc.rect(centerX, 202, vFotoW, vFotoH); // Borde ajustado a la nueva medida
     }
 
     // --- PÁGINA 2: DNI LÍDER (Centrado y tamaño ID) ---
