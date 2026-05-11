@@ -84,7 +84,7 @@ async function generarPDFPoda() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const logoUrl = "https://https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
+    const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
 
     // Función para obtener la imagen y convertirla a base64
     const getLogoBase64 = (url) => {
