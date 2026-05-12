@@ -170,8 +170,20 @@ async function generarPDFPoda() {
     escribirLinea("HORARIO:", `INICIO ${document.getElementById('h-ini').value} / FINAL ${document.getElementById('h-fin').value}`, yD); yD += 6;
     escribirLinea("TRABAJO:", `Brecha ${document.getElementById('m-brecha').value}m, Poda ${document.getElementById('m-poda').value}m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
     escribirLinea("PAGOS:", `M.O. L. ${document.getElementById('pago-mo').value} / Trans. L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
-    escribirLinea("GPS:", `Inicio ${gpsIni} | Fin ${gpsFin}`, yD); yD += 6;
-    escribirLinea("RESPONSABLES:", `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`, yD);
+    
+    // Dibujamos el GPS en la columna izquierda (X = 15 y X = 35)
+    doc.setFont("helvetica", "bold");
+    doc.text("GPS:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Ini: ${gpsIni} | Fin: ${gpsFin}`, 35, yD); // Ajusté el 52 a 35 para que quepa
+
+    // Dibujamos RESPONSABLES en la misma altura (yD), pero más a la derecha (X = 110)
+    doc.setFont("helvetica", "bold");
+    doc.text("RESPONSABLES:", 110, yD); 
+    doc.setFont("helvetica", "normal");
+    // Combinamos los dos responsables en un texto corto para que no se salga del cuadro
+    let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
+    doc.text(resps.substring(0, 40), 145, yD); // X = 145 para el valor
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
