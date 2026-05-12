@@ -4,6 +4,9 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 
+// Inicializar conversor UTM
+const utm = new UTMLatLng();
+
 // CREDENCIALES
 const USUARIOS = {
     "admin": "admin123",
@@ -69,13 +72,29 @@ function ingresarManual() {
     }
 }
 
+// MODIFICADO: Ahora convierte de Lat/Lng a UTM al marcar
 function marcarGPS(tipo) {
     let p = markerP.getLatLng();
-    let lat = Number(p.lat.toFixed(6));
-    let lng = Number(p.lng.toFixed(6));
-    let c = lat + ", " + lng;
-    if (tipo === 'ini') { gpsIni = c; latIni = lat; lngIni = lng; } 
-    else { gpsFin = c; latFin = lat; lngFin = lng; }
+    let lat = p.lat;
+    let lng = p.lng;
+
+    // Conversión a UTM (Honduras está en Zona 16N mayormente)
+    // El 0 al final indica sin decimales para los metros (N y E)
+    const cUTM = utm.convertLatLngToUtm(lat, lng, 0);
+    
+    // Formato final: Zona Este Norte
+    let textoUTM = `Z:${cUTM.UtmZone} E:${cUTM.Easting} N:${cUTM.Northing}`;
+
+    if (tipo === 'ini') { 
+        gpsIni = textoUTM; 
+        latIni = lat; 
+        lngIni = lng; 
+    } else { 
+        gpsFin = textoUTM; 
+        latFin = lat; 
+        lngFin = lng; 
+    }
+    
     document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
 }
 
@@ -86,7 +105,6 @@ async function generarPDFPoda() {
     const doc = new jsPDF();
     const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
 
-    // Función para obtener la imagen y convertirla a base64
     const getLogoBase64 = (url) => {
         return new Promise((resolve) => {
             const img = new Image();
@@ -106,12 +124,10 @@ async function generarPDFPoda() {
     const logoImg = await getLogoBase64(logoUrl);
 
     const dibujarEstructuraInstitucional = () => {
-        // Marco de la hoja
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
         doc.rect(5, 5, 200, 287); 
 
-        // Cajetín encabezado
         doc.setLineWidth(0.3);
         doc.rect(10, 10, 190, 25); 
         
@@ -121,7 +137,6 @@ async function generarPDFPoda() {
         doc.line(150, 18, 200, 18);
         doc.line(150, 26, 200, 26);
 
-        // Logo insertado en la celda izquierda
         if (logoImg) {
             doc.addImage(logoImg, 'PNG', 12, 12, 45, 20);
         }
@@ -150,7 +165,6 @@ async function generarPDFPoda() {
         });
     };
 
-    // PÁGINA 1
     dibujarEstructuraInstitucional();
     
     doc.setLineWidth(0.2);
@@ -170,7 +184,10 @@ async function generarPDFPoda() {
     escribirLinea("HORARIO:", `INICIO ${document.getElementById('h-ini').value} / FINAL ${document.getElementById('h-fin').value}`, yD); yD += 6;
     escribirLinea("ACTIVIDADES REALIZADAS:", `Brecha ${document.getElementById('m-brecha').value} m, Poda ${document.getElementById('m-poda').value} m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
     escribirLinea("PAGOS/PERSONAL CONTRATADO:", `Mano de obra = L. ${document.getElementById('pago-mo').value} / Transporte = L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
-    escribirLinea("GPS:", `Inicio ${gpsIni} | Fin ${gpsFin}`, yD); yD += 6;
+    
+    // MODIFICADO: Etiqueta GPS (UTM)
+    escribirLinea("GPS (UTM):", `Inicio ${gpsIni} | Fin ${gpsFin}`, yD); yD += 6;
+    
     escribirLinea("RESPONSABLES:", `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`, yD);
 
     const fGrupo = await leerFoto('f-grupo');
@@ -181,68 +198,57 @@ async function generarPDFPoda() {
         doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
         doc.rect(25, 95, 160, 95);
     }
-   if (fVehiculo) {
-        // Título de la foto
+    if (fVehiculo) {
         doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" }); // Título centrado
-
-        // Dimensiones para el formato Vertical (Retrato)
-        const vFotoW = 80; // Ancho reducido (mm)
-        const vFotoH = 85; // Alto aumentado (mm)
-        const centerX = (210 - vFotoW) / 2; // Cálculo para centrar en la hoja
-
-        // Insertar la imagen y el borde (rectángulo)
+        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
+        const vFotoW = 80;
+        const vFotoH = 85;
+        const centerX = (210 - vFotoW) / 2;
         doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
-        doc.rect(centerX, 202, vFotoW, vFotoH); // Borde ajustado a la nueva medida
+        doc.rect(centerX, 202, vFotoW, vFotoH);
     }
 
-    // --- PÁGINA 2: DNI LÍDER (Centrado y tamaño ID) ---
-const fLiderF = await leerFoto('f-lider-f');
-const fLiderR = await leerFoto('f-lider-r');
+    const fLiderF = await leerFoto('f-lider-f');
+    const fLiderR = await leerFoto('f-lider-r');
 
-if (fLiderF || fLiderR) {
-    doc.addPage();
-    dibujarEstructuraInstitucional();
-    
-    const cardW = 85; // Ancho estándar ID mm
-    const cardH = 54; // Alto estándar ID mm
-    const centerX = (210 - cardW) / 2;
-
-    if (fLiderF) {
-        doc.setFont("helvetica", "bold");
-        doc.text("DNI LÍDER - FRONTAL", 105, 55, {align: "center"});
-        doc.addImage(fLiderF, 'JPEG', centerX, 60, cardW, cardH);
-        doc.rect(centerX, 60, cardW, cardH);
-    }
-
-    if (fLiderR) {
-        doc.setFont("helvetica", "bold");
-        doc.text("DNI LÍDER - REVÉS", 105, 135, {align: "center"});
-        doc.addImage(fLiderR, 'JPEG', centerX, 140, cardW, cardH);
-        doc.rect(centerX, 140, cardW, cardH);
-    }
-}
-
-// --- ACTUALIZACIÓN DE IDENTIDADES GRUPALES ---
-// Reemplaza tu bucle anterior de 'ids' por este que incluye las 4 fotos:
-const identidades = [
-    {id:'f-id-f', t:'DNI PERSONAL FRENTE (1)'}, 
-    {id:'f-id-r', t:'DNI PERSONAL REVÉS (1)'},
-    {id:'f-id-f2', t:'DNI PERSONAL FRENTE (2)'}, 
-    {id:'f-id-r2', t:'DNI PERSONAL REVÉS (2)'}
-];
-
-for(let p of identidades){
-    const img = await leerFoto(p.id);
-    if(img) {
+    if (fLiderF || fLiderR) {
         doc.addPage();
         dibujarEstructuraInstitucional();
-        doc.setFont("helvetica", "bold");
-        doc.text(p.t, 105, 45, {align: "center"});
-        doc.addImage(img, 'JPEG', 15, 50, 180, 230); // Estas siguen ocupando la hoja
-        doc.rect(15, 50, 180, 230);
+        const cardW = 85;
+        const cardH = 54;
+        const centerX = (210 - cardW) / 2;
+        if (fLiderF) {
+            doc.setFont("helvetica", "bold");
+            doc.text("DNI LÍDER - FRONTAL", 105, 55, {align: "center"});
+            doc.addImage(fLiderF, 'JPEG', centerX, 60, cardW, cardH);
+            doc.rect(centerX, 60, cardW, cardH);
+        }
+        if (fLiderR) {
+            doc.setFont("helvetica", "bold");
+            doc.text("DNI LÍDER - REVÉS", 105, 135, {align: "center"});
+            doc.addImage(fLiderR, 'JPEG', centerX, 140, cardW, cardH);
+            doc.rect(centerX, 140, cardW, cardH);
+        }
     }
-}
+
+    const identidades = [
+        {id:'f-id-f', t:'DNI PERSONAL FRENTE (1)'}, 
+        {id:'f-id-r', t:'DNI PERSONAL REVÉS (1)'},
+        {id:'f-id-f2', t:'DNI PERSONAL FRENTE (2)'}, 
+        {id:'f-id-r2', t:'DNI PERSONAL REVÉS (2)'}
+    ];
+
+    for(let p of identidades){
+        const img = await leerFoto(p.id);
+        if(img) {
+            doc.addPage();
+            dibujarEstructuraInstitucional();
+            doc.setFont("helvetica", "bold");
+            doc.text(p.t, 105, 45, {align: "center"});
+            doc.addImage(img, 'JPEG', 15, 50, 180, 230);
+            doc.rect(15, 50, 180, 230);
+        }
+    }
 
     doc.addPage();
     dibujarEstructuraInstitucional();
