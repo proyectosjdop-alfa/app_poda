@@ -163,7 +163,7 @@ async function generarPDFPoda() {
     doc.setFont("helvetica", "bold");
     doc.text("CIRCUITO:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-circuito').value, 50, yD);
+    doc.text(document.getElementById('poda-circuito').value, 35, yD);
 
     doc.setFont("helvetica", "bold");
     doc.text("ZONA DE TRABAJO:", 100, yD);
@@ -175,19 +175,20 @@ async function generarPDFPoda() {
     doc.setFont("helvetica", "bold");
     doc.text("FECHA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-fecha').value, 50, yD);
+    doc.text(document.getElementById('poda-fecha').value, 35, yD);
 
     doc.setFont("helvetica", "bold");
     doc.text("HORARIO:", 100, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`${document.getElementById('h-ini').value} a ${document.getElementById('h-fin').value}`, 135, yD);
+    let horario = `H.INICIO ${document.getElementById('h-ini').value}  / H.FINAL ${document.getElementById('h-fin').value}`;
+    doc.text(horario.substring(0, 55), 135, yD); // Acortamos un poco por si son muy largos
     yD += 6;
 
     // --- FILA 3: GPS ---
     doc.setFont("helvetica", "bold");
     doc.text("GPS (UTM):", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`Inicio: ${gpsIni} | Final: ${gpsFin}`, 50, yD);
+    doc.text(`Inicio: ${gpsIni} | Final: ${gpsFin}`, 35, yD);
     yD += 6;
 
     // --- FILA 4: TRABAJO EJECUTADO ---
@@ -195,14 +196,14 @@ async function generarPDFPoda() {
     doc.text("TRABAJO EJECUTADO:", 15, yD);
     doc.setFont("helvetica", "normal");
     let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
-    doc.text(trabajo, 50, yD);
+    doc.text(trabajo, 65, yD);
     yD += 6;
 
     // --- FILA 5: PERSONAS Y RESPONSABLES ---
     doc.setFont("helvetica", "bold");
     doc.text("PERSONAS CONTRATADAS:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-personas').value, 50, yD);
+    doc.text(document.getElementById('poda-personas').value, 65, yD);
 
     doc.setFont("helvetica", "bold");
     doc.text("RESPONSABLES:", 100, yD); // X=100 para que quepan bien los nombres
@@ -215,14 +216,14 @@ async function generarPDFPoda() {
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-mo').value}`, 50, yD);
+    doc.text(`L. ${document.getElementById('pago-mo').value}`, 65, yD);
     yD += 6;
 
     // --- FILA 7: PAGO TRANSPORTE ---
     doc.setFont("helvetica", "bold");
     doc.text("PAGO TRANSPORTE:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-trans').value}`, 50, yD);
+    doc.text(`L. ${document.getElementById('pago-trans').value}`, 65, yD);
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
