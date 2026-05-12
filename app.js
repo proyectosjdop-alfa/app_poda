@@ -4,10 +4,7 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 
-// Inicializar conversor UTM
-const utm = new UTMLatLng();
-
-// CREDENCIALES
+// 1. PRIMERO LAS CREDENCIALES (Para que validarLogin las encuentre siempre)
 const USUARIOS = {
     "admin": "admin123",
     "brus laguna": "enee2026",
@@ -25,6 +22,7 @@ const USUARIOS = {
     "tocoa": "enee2026"
 };
 
+// 2. FUNCIÓN DE LOGIN
 function validarLogin() {
     const u = document.getElementById('user').value.toLowerCase();
     const p = document.getElementById('pass').value;
@@ -72,32 +70,36 @@ function ingresarManual() {
     }
 }
 
-// MODIFICADO: Ahora convierte de Lat/Lng a UTM al marcar
+// 3. FUNCIÓN DE MARCADO GPS CON CONVERSIÓN UTM
 function marcarGPS(tipo) {
     let p = markerP.getLatLng();
     let lat = p.lat;
     let lng = p.lng;
 
-    // Conversión a UTM (Honduras está en Zona 16N mayormente)
-    // El 0 al final indica sin decimales para los metros (N y E)
-    const cUTM = utm.convertLatLngToUtm(lat, lng, 0);
-    
-    // Formato final: Zona Este Norte
-    let textoUTM = `Z:${cUTM.UtmZone} E:${cUTM.Easting} N:${cUTM.Northing}`;
+    try {
+        // Inicializamos el conversor justo al momento de usarlo
+        const utm = new UTMLatLng();
+        const cUTM = utm.convertLatLngToUtm(lat, lng, 0);
+        let textoUTM = `Z:${cUTM.UtmZone} E:${cUTM.Easting} N:${cUTM.Northing}`;
 
-    if (tipo === 'ini') { 
-        gpsIni = textoUTM; 
-        latIni = lat; 
-        lngIni = lng; 
-    } else { 
-        gpsFin = textoUTM; 
-        latFin = lat; 
-        lngFin = lng; 
+        if (tipo === 'ini') { 
+            gpsIni = textoUTM; 
+            latIni = lat; 
+            lngIni = lng; 
+        } else { 
+            gpsFin = textoUTM; 
+            latFin = lat; 
+            lngFin = lng; 
+        }
+        
+        document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
+    } catch (error) {
+        console.error("Error en conversión UTM:", error);
+        alert("Error al convertir a UTM. Asegúrese de estar conectado a internet para cargar las librerías.");
     }
-    
-    document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
 }
 
+// 4. GENERACIÓN DE PDF
 async function generarPDFPoda() {
     try { enviarDatosCloudflare(); } catch(e) {}
 
@@ -184,10 +186,7 @@ async function generarPDFPoda() {
     escribirLinea("HORARIO:", `INICIO ${document.getElementById('h-ini').value} / FINAL ${document.getElementById('h-fin').value}`, yD); yD += 6;
     escribirLinea("ACTIVIDADES REALIZADAS:", `Brecha ${document.getElementById('m-brecha').value} m, Poda ${document.getElementById('m-poda').value} m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
     escribirLinea("PAGOS/PERSONAL CONTRATADO:", `Mano de obra = L. ${document.getElementById('pago-mo').value} / Transporte = L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
-    
-    // MODIFICADO: Etiqueta GPS (UTM)
     escribirLinea("GPS (UTM):", `Inicio ${gpsIni} | Fin ${gpsFin}`, yD); yD += 6;
-    
     escribirLinea("RESPONSABLES:", `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`, yD);
 
     const fGrupo = await leerFoto('f-grupo');
