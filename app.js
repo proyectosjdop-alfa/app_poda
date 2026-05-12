@@ -4,7 +4,7 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 
-// 1. PRIMERO LAS CREDENCIALES (Para que validarLogin las encuentre siempre)
+// 1. CREDENCIALES
 const USUARIOS = {
     "admin": "admin123",
     "brus laguna": "enee2026",
@@ -22,7 +22,6 @@ const USUARIOS = {
     "tocoa": "enee2026"
 };
 
-// 2. FUNCIÓN DE LOGIN
 function validarLogin() {
     const u = document.getElementById('user').value.toLowerCase();
     const p = document.getElementById('pass').value;
@@ -70,17 +69,36 @@ function ingresarManual() {
     }
 }
 
-// 3. FUNCIÓN DE MARCADO GPS CON CONVERSIÓN UTM
+// 2. FUNCIÓN DE MARCADO GPS CON CONVERSIÓN UTM INTEGRADA (ZONA 16N)
 function marcarGPS(tipo) {
     let p = markerP.getLatLng();
     let lat = p.lat;
     let lng = p.lng;
 
     try {
-        // Inicializamos el conversor justo al momento de usarlo
-        const utm = new UTMLatLng();
-        const cUTM = utm.convertLatLngToUtm(lat, lng, 0);
-        let textoUTM = `Z:${cUTM.UtmZone} E:${cUTM.Easting} N:${cUTM.Northing}`;
+        const a = 6378137.0;
+        const eccSquared = 0.00669438;
+        const k0 = 0.9996;
+        const zoneNumber = 16; 
+        const lonOrigin = (zoneNumber - 1) * 6 - 180 + 3;
+        const latRad = lat * Math.PI / 180.0;
+        const lonRad = lng * Math.PI / 180.0;
+        const lonOriginRad = lonOrigin * Math.PI / 180.0;
+
+        const N = a / Math.sqrt(1 - eccSquared * Math.sin(latRad) * Math.sin(latRad));
+        const T = Math.tan(latRad) * Math.tan(latRad);
+        const C = eccSquared * Math.cos(latRad) * Math.cos(latRad) / (1 - eccSquared);
+        const A = Math.cos(latRad) * (lonRad - lonOriginRad);
+
+        const M = a * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64 - 5 * eccSquared * eccSquared * eccSquared / 256) * latRad - 
+                  (3 * eccSquared / 8 + 3 * eccSquared * eccSquared / 32 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(2 * latRad) + 
+                  (15 * eccSquared * eccSquared / 256 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(4 * latRad) - 
+                  (35 * eccSquared * eccSquared * eccSquared / 3072) * Math.sin(6 * latRad));
+
+        const easting = (k0 * N * (A + (1 - T + C) * A * A * A / 6 + (5 - 18 * T + T * T + 72 * C - 58 * eccSquared) * A * A * A * A * A / 120) + 500000.0);
+        const northing = (k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccSquared) * A * A * A * A * A * A / 720)));
+
+        let textoUTM = `Z:16N E:${Math.round(easting)} N:${Math.round(northing)}`;
 
         if (tipo === 'ini') { 
             gpsIni = textoUTM; 
@@ -94,15 +112,12 @@ function marcarGPS(tipo) {
         
         document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
     } catch (error) {
-        console.error("Error en conversión UTM:", error);
-        alert("Error al convertir a UTM. Asegúrese de estar conectado a internet para cargar las librerías.");
+        console.error("Error en conversión:", error);
     }
 }
 
-// 4. GENERACIÓN DE PDF
+// 3. GENERACIÓN DE PDF (SIN CLOUDFLARE)
 async function generarPDFPoda() {
-    try { enviarDatosCloudflare(); } catch(e) {}
-
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
@@ -129,10 +144,8 @@ async function generarPDFPoda() {
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
         doc.rect(5, 5, 200, 287); 
-
         doc.setLineWidth(0.3);
         doc.rect(10, 10, 190, 25); 
-        
         doc.line(60, 10, 60, 35);  
         doc.line(150, 10, 150, 35); 
         doc.line(170, 10, 170, 35);
@@ -168,7 +181,6 @@ async function generarPDFPoda() {
     };
 
     dibujarEstructuraInstitucional();
-    
     doc.setLineWidth(0.2);
     doc.rect(10, 40, 190, 45);
     doc.setFontSize(9);
@@ -200,8 +212,7 @@ async function generarPDFPoda() {
     if (fVehiculo) {
         doc.setFont("helvetica", "bold"); 
         doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
-        const vFotoW = 80;
-        const vFotoH = 85;
+        const vFotoW = 80; const vFotoH = 85;
         const centerX = (210 - vFotoW) / 2;
         doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
         doc.rect(centerX, 202, vFotoW, vFotoH);
@@ -213,8 +224,7 @@ async function generarPDFPoda() {
     if (fLiderF || fLiderR) {
         doc.addPage();
         dibujarEstructuraInstitucional();
-        const cardW = 85;
-        const cardH = 54;
+        const cardW = 85; const cardH = 54;
         const centerX = (210 - cardW) / 2;
         if (fLiderF) {
             doc.setFont("helvetica", "bold");
@@ -285,19 +295,4 @@ function previsualizar(input, idContenedor) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
-
-function enviarDatosCloudflare() {
-    const data = {
-        sector: sectorActivo,
-        circuito: document.getElementById('poda-circuito').value,
-        zona_trabajo: document.getElementById('poda-zona').value,
-        fecha_envio: new Date().toISOString()
-    };
-    fetch("https://api-cuadrillas.cgujuticalpa.workers.dev/", {
-        method: "POST",
-        mode: "no-cors", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    }).catch(() => {}); 
 }
