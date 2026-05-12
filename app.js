@@ -186,9 +186,14 @@ async function generarPDFPoda() {
 
     // --- FILA 3: GPS ---
     doc.setFont("helvetica", "bold");
-    doc.text("GPS (UTM):", 15, yD);
+    doc.text("PUNTO GPS INICIAL:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`Inicio: ${gpsIni} | Final: ${gpsFin}`, 35, yD);
+    doc.text(` ${gpsIni}`, 35, yD);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("PUNTO GPS FINAL:", 100, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(` ${gpsFin}`, 135, yD);
     yD += 6;
 
     // --- FILA 4: TRABAJO EJECUTADO ---
