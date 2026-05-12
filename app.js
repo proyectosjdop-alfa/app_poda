@@ -196,15 +196,7 @@ async function generarPDFPoda() {
     doc.text(` ${gpsFin}`, 133, yD);
     yD += 6;
 
-    // --- FILA 4: TRABAJO EJECUTADO ---
-    doc.setFont("helvetica", "bold");
-    doc.text("TRABAJO EJECUTADO:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
-    doc.text(trabajo, 60, yD);
-    yD += 6;
-
-    // --- FILA 5: PERSONAS Y RESPONSABLES ---
+    // --- FILA 4: PERSONAS Y RESPONSABLES ---
     doc.setFont("helvetica", "bold");
     doc.text("PERSONAS CONTRATADAS:", 15, yD);
     doc.setFont("helvetica", "normal");
@@ -217,19 +209,27 @@ async function generarPDFPoda() {
     doc.text(resps.substring(0, 55), 133, yD); // Acortamos un poco por si son muy largos
     yD += 6;
 
-    // --- FILA 6: PAGO MANO DE OBRA ---
+    // --- FILA 5: PAGO MANO DE OBRA ---
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(`L. ${document.getElementById('pago-mo').value}`, 60, yD);
     yD += 6;
 
-    // --- FILA 7: PAGO TRANSPORTE ---
+    // --- FILA 6: PAGO TRANSPORTE ---
     doc.setFont("helvetica", "bold");
     doc.text("PAGO TRANSPORTE:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(`L. ${document.getElementById('pago-trans').value}`, 60, yD);
+    yD += 6;
 
+    // --- FILA 7: TRABAJO EJECUTADO ---
+    doc.setFont("helvetica", "bold");
+    doc.text("TRABAJO EJECUTADO:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
+    doc.text(trabajo, 60, yD);
+   
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
 
