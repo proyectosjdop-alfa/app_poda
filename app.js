@@ -168,8 +168,8 @@ async function generarPDFPoda() {
     escribirLinea("CIRCUITO:", document.getElementById('poda-circuito').value, yD); yD += 6;
     escribirLinea("ZONA DE TRABAJO:", document.getElementById('poda-zona').value, yD); yD += 6;
     escribirLinea("HORARIO:", `INICIO ${document.getElementById('h-ini').value} / FINAL ${document.getElementById('h-fin').value}`, yD); yD += 6;
-    escribirLinea("TRABAJO:", `Brecha ${document.getElementById('m-brecha').value}m, Poda ${document.getElementById('m-poda').value}m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
-    escribirLinea("PAGOS:", `M.O. L. ${document.getElementById('pago-mo').value} / Trans. L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
+    escribirLinea("ACTIVIDADES REALIZADAS:", `Brecha ${document.getElementById('m-brecha').value} m, Poda ${document.getElementById('m-poda').value} m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
+    escribirLinea("PAGOS/PERSONAL CONTRATADO:", `Mano de obra = L. ${document.getElementById('pago-mo').value} / Transporte = L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
     escribirLinea("GPS:", `Inicio ${gpsIni} | Fin ${gpsFin}`, yD); yD += 6;
     escribirLinea("RESPONSABLES:", `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`, yD);
 
