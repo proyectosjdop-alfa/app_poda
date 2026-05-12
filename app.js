@@ -212,7 +212,7 @@ async function generarPDFPoda() {
         const M = a * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64 - 5 * eccSquared * eccSquared * eccSquared / 256) * latRad - (3 * eccSquared / 8 + 3 * eccSquared * eccSquared / 32 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(2 * latRad) + (15 * eccSquared * eccSquared / 256 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(4 * latRad) - (35 * eccSquared * eccSquared * eccSquared / 3072) * Math.sin(6 * latRad));
         const easting = (k0 * N * (A + (1 - T + C) * A * A * A / 6 + (5 - 18 * T + T * T + 72 * C - 58 * eccSquared) * A * A * A * A * A / 120) + 500000.0);
         const northing = (k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccSquared) * A * A * A * A * A * A / 720)));
-        return `X:${Math.round(easting)} , Y:${Math.round(northing)}`;
+        return `${Math.round(easting)}, ${Math.round(northing)}`;
     };
 
     // Calculamos los valores UTM
@@ -220,7 +220,7 @@ async function generarPDFPoda() {
     let utmFinReporte = convertirA_UTM(latFin, lngFin);
 
     // Escribimos el Inicial
-    doc.text(`${utmIniReporte}`, 40, yD);
+    doc.text(`${utmIniReporte}`, 41, yD);
 
     // Escribimos el Final en la segunda columna
     doc.setFont("helvetica", "bold");
