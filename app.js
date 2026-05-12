@@ -175,7 +175,16 @@ async function generarPDFPoda() {
     doc.setFont("helvetica", "bold");
     doc.text("FECHA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-fecha').value, 41, yD);
+    // Obtenemos la fecha del input (viene YYYY-MM-DD)
+    let fechaInput = document.getElementById('poda-fecha').value; 
+    let fechaFormateada = "";
+    
+    if(fechaInput) {
+        // Dividimos el texto por el guion y lo reordenamos a dia-mes-año
+        const [anio, mes, dia] = fechaInput.split("-");
+        fechaFormateada = `${dia}-${mes}-${anio}`;
+    }
+    doc.text(fechaFormateada, 41, yD);
 
     doc.setFont("helvetica", "bold");
     doc.text("HORARIO:", 100, yD);
