@@ -151,39 +151,78 @@ async function generarPDFPoda() {
     };
 
     // PÁGINA 1
+    // --- CONFIGURACIÓN INICIAL ---
     dibujarEstructuraInstitucional();
-
     doc.setLineWidth(0.2);
-    doc.rect(10, 40, 190, 45);
+    // Dibujamos el rectángulo (ajusté el alto a 50 por si acaso)
+    doc.rect(10, 40, 190, 45); 
     doc.setFontSize(9);
     let yD = 47;
 
-    const escribirLinea = (label, value, y) => {
-        doc.setFont("helvetica", "bold");
-        doc.text(label, 15, y);
-        doc.setFont("helvetica", "normal");
-        doc.text(String(value), 52, y);
-    };
-
-    escribirLinea("CIRCUITO:", document.getElementById('poda-circuito').value, yD); yD += 6;
-    escribirLinea("ZONA DE TRABAJO:", document.getElementById('poda-zona').value, yD); yD += 6;
-    escribirLinea("HORARIO:", `INICIO ${document.getElementById('h-ini').value} / FINAL ${document.getElementById('h-fin').value}`, yD); yD += 6;
-    escribirLinea("TRABAJO:", `Brecha ${document.getElementById('m-brecha').value}m, Poda ${document.getElementById('m-poda').value}m, Postes ${document.getElementById('m-postes').value}`, yD); yD += 6;
-    escribirLinea("PAGOS:", `M.O. L. ${document.getElementById('pago-mo').value} / Trans. L. ${document.getElementById('pago-trans').value} / Personal: ${document.getElementById('poda-personas').value}`, yD); yD += 6;
-    
-    // Dibujamos el GPS en la columna izquierda (X = 15 y X = 35)
+    // --- FILA 1: CIRCUITO Y ZONA DE TRABAJO ---
     doc.setFont("helvetica", "bold");
-    doc.text("GPS:", 15, yD);
+    doc.text("CIRCUITO:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`Ini: ${gpsIni} | Fin: ${gpsFin}`, 35, yD); // Ajusté el 52 a 35 para que quepa
+    doc.text(document.getElementById('poda-circuito').value, 50, yD);
 
-    // Dibujamos RESPONSABLES en la misma altura (yD), pero más a la derecha (X = 110)
     doc.setFont("helvetica", "bold");
-    doc.text("RESPONSABLES:", 110, yD); 
+    doc.text("ZONA DE TRABAJO:", 100, yD);
     doc.setFont("helvetica", "normal");
-    // Combinamos los dos responsables en un texto corto para que no se salga del cuadro
+    doc.text(document.getElementById('poda-zona').value, 135, yD);
+    yD += 6;
+
+    // --- FILA 2: FECHA Y HORARIO ---
+    doc.setFont("helvetica", "bold");
+    doc.text("FECHA:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(document.getElementById('poda-fecha').value, 50, yD);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("HORARIO:", 100, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${document.getElementById('h-ini').value} a ${document.getElementById('h-fin').value}`, 135, yD);
+    yD += 6;
+
+    // --- FILA 3: GPS ---
+    doc.setFont("helvetica", "bold");
+    doc.text("GPS (UTM):", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Inicio: ${gpsIni} | Final: ${gpsFin}`, 50, yD);
+    yD += 6;
+
+    // --- FILA 4: TRABAJO EJECUTADO ---
+    doc.setFont("helvetica", "bold");
+    doc.text("TRABAJO EJECUTADO:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
+    doc.text(trabajo, 50, yD);
+    yD += 6;
+
+    // --- FILA 5: PERSONAS Y RESPONSABLES ---
+    doc.setFont("helvetica", "bold");
+    doc.text("PERSONAS CONTRATADAS:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(document.getElementById('poda-personas').value, 50, yD);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("RESPONSABLES:", 100, yD); // X=100 para que quepan bien los nombres
+    doc.setFont("helvetica", "normal");
     let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
-    doc.text(resps.substring(0, 40), 145, yD); // X = 145 para el valor
+    doc.text(resps.substring(0, 55), 135, yD); // Acortamos un poco por si son muy largos
+    yD += 6;
+
+    // --- FILA 6: PAGO MANO DE OBRA ---
+    doc.setFont("helvetica", "bold");
+    doc.text("PAGO MANO DE OBRA:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(`L. ${document.getElementById('pago-mo').value}`, 50, yD);
+    yD += 6;
+
+    // --- FILA 7: PAGO TRANSPORTE ---
+    doc.setFont("helvetica", "bold");
+    doc.text("PAGO TRANSPORTE:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(`L. ${document.getElementById('pago-trans').value}`, 50, yD);
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
