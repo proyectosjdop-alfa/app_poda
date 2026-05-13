@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ENEE-UTCD - Poda Comunitaria</title>
+    <!-- Estilos -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Librerías base -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
@@ -23,7 +26,6 @@
         <label>Seleccione su Sector:</label>
         <select id="user">
             <option value="">Seleccione...</option>
-            <option value="admin">ADMINISTRADOR CENTRAL</option>
             <option value="brus laguna">BRUS LAGUNA</option>
             <option value="choluteca">CHOLUTECA</option>
             <option value="comayagua">COMAYAGUA</option>
@@ -31,7 +33,7 @@
             <option value="el progreso">EL PROGRESO</option>
             <option value="juticalpa">JUTICALPA</option>
             <option value="la ceiba">LA CEIBA</option>
-            <option value="san pedro sula">SAN PEDRO SULA</option>
+	    <option value="san pedro sula">SAN PEDRO SULA</option>
             <option value="santa barbara">SANTA BARBARA</option>
             <option value="santa rosa">SANTA ROSA</option>
             <option value="santa cruz">SANTA CRUZ</option>
@@ -41,8 +43,8 @@
 
         <label>Contraseña:</label>
         <input type="password" id="pass" placeholder="Ingrese su contraseña">
-
-        <button type="button" class="btn-enviar" onclick="validarLogin()">INGRESAR</button>
+	
+	<button type="button" class="btn-enviar" onclick="validarLogin()">INGRESAR</button>
         <p id="login-error" style="color: #e74c3c; font-size: 0.8rem; margin-top: 10px; display: none;">Credenciales incorrectas</p>
     </div>
 </div>
@@ -59,8 +61,10 @@
     <form id="form-poda">
         <label>Circuito:</label>
         <input type="text" id="poda-circuito">
+
         <label>Zona de Trabajo:</label>
         <input type="text" id="poda-zona">
+
         <label>Fecha:</label>
         <input type="date" id="poda-fecha">
 
@@ -88,29 +92,60 @@
         <input type="text" id="resp-super" placeholder="Responsable Supervisión">
         <input type="text" id="resp-activ" placeholder="Responsable Actividades Contratista">
 
-        <!-- FOTOS -->
         <label>Fotos Grupo e Identidades:</label>
         <div class="grid-2">
-            <div class="foto-input-group"><span>📸 GRUPO</span><input type="file" id="f-grupo" onchange="previsualizar(this, 'p-f-grupo')"><div id="p-f-grupo" class="preview-box"></div></div>
-            <div class="foto-input-group"><span>📸 VEHÍCULO</span><input type="file" id="f-vehiculo" onchange="previsualizar(this, 'p-f-vehiculo')"><div id="p-f-vehiculo" class="preview-box"></div></div>
+            <div class="foto-input-group">
+                <span>📸 GRUPO (TOMAR EN HORIZONTAL)</span>
+                <input type="file" id="f-grupo" onchange="previsualizar(this, 'p-f-grupo')">
+                <div id="p-f-grupo" class="preview-box"></div>
+            </div>
+	    <div class="foto-input-group">
+                <span>📸 VEHÍCULO (TOMAR EN HORIZONTAL)</span>
+                <input type="file" id="f-vehiculo" onchange="previsualizar(this, 'p-f-vehiculo')">
+                <div id="p-f-vehiculo" class="preview-box"></div>
+            </div>
         </div>
 
         <label>Fotos Líder de Cuadrilla:</label>
         <div class="grid-2">
-            <div class="foto-input-group"><span>DNI FRENTE</span><input type="file" id="f-lider-f" onchange="previsualizar(this, 'p-f-liderf')"><div id="p-f-liderf" class="preview-box"></div></div>
-            <div class="foto-input-group"><span>DNI REVÉS</span><input type="file" id="f-lider-r" onchange="previsualizar(this, 'p-f-liderr')"><div id="p-f-liderr" class="preview-box"></div></div>
+		<div class="foto-input-group">
+                <span>DNI LÍDER FRENTE</span>
+                <input type="file" id="f-lider-f" onchange="previsualizar(this, 'p-f-liderf')">
+                <div id="p-f-liderf" class="preview-box"></div>
+            </div>
+            <div class="foto-input-group">
+                <span>DNI LÍDER REVÉS</span>
+                <input type="file" id="f-lider-r" onchange="previsualizar(this, 'p-f-liderr')">
+                <div id="p-f-liderr" class="preview-box"></div>
+            </div>
         </div>
 
         <label>Identidades Personal (Grupo 1):</label>
         <div class="grid-2">
-            <div class="foto-input-group"><span>DNI FRENTE (1)</span><input type="file" id="f-id-f" onchange="previsualizar(this, 'p-f-idf')"><div id="p-f-idf" class="preview-box"></div></div>
-            <div class="foto-input-group"><span>DNI REVÉS (1)</span><input type="file" id="f-id-r" onchange="previsualizar(this, 'p-f-idr')"><div id="p-f-idr" class="preview-box"></div></div>
+		<div class="foto-input-group">
+                <span>DNI FRENTE (1)</span>
+                <input type="file" id="f-id-f" onchange="previsualizar(this, 'p-f-idf')">
+                <div id="p-f-idf" class="preview-box"></div>
+            </div>
+            <div class="foto-input-group">
+                <span>DNI REVÉS (1)</span>
+                <input type="file" id="f-id-r" onchange="previsualizar(this, 'p-f-idr')">
+                <div id="p-f-idr" class="preview-box"></div>
+            </div>
         </div>
 
-        <label>Identidades Personal (Grupo 2):</label>
+        <label>Identidades Personal (Grupo 2 - Opcional):</label>
         <div class="grid-2">
-            <div class="foto-input-group"><span>DNI FRENTE (2)</span><input type="file" id="f-id-f2" onchange="previsualizar(this, 'p-f-idf2')"><div id="p-f-idf2" class="preview-box"></div></div>
-            <div class="foto-input-group"><span>DNI REVÉS (2)</span><input type="file" id="f-id-r2" onchange="previsualizar(this, 'p-f-idr2')"><div id="p-f-idr2" class="preview-box"></div></div>
+		<div class="foto-input-group">
+                <span>DNI FRENTE (2)</span>
+                <input type="file" id="f-id-f2" onchange="previsualizar(this, 'p-f-idf2')">
+                <div id="p-f-idf2" class="preview-box"></div>
+            </div>
+            <div class="foto-input-group">
+                <span>DNI REVÉS (2)</span>
+                <input type="file" id="f-id-r2" onchange="previsualizar(this, 'p-f-idr2')">
+                <div id="p-f-idr2" class="preview-box"></div>
+            </div>
         </div>
 
         <label>Fotos Antes:</label>
@@ -136,12 +171,13 @@
 
         <label>GPS:</label>
         <div id="map-poda" style="height: 180px; border-radius: 8px;"></div>
+
         <div style="background: #1b2a36; padding: 10px; border-radius: 8px; margin-top: 10px;">
-            <span style="font-size: 0.7rem; color: #f1c40f;">INGRESO MANUAL:</span>
+		 <span style="font-size: 0.7rem; color: #f1c40f;">INGRESO MANUAL DE COORDENADAS:</span>
             <div class="grid-3">
-                <input type="number" id="manual-lat" step="any" placeholder="Lat">
-                <input type="number" id="manual-lng" step="any" placeholder="Lng">
-                <button type="button" class="btn-secundario" onclick="ingresarManual()">UBICAR</button>
+                <input type="number" id="manual-lat" step="any" placeholder="Latitud">
+                <input type="number" id="manual-lng" step="any" placeholder="Longitud">
+                <button type="button" class="btn-secundario" style="margin-top:5px;" onclick="ingresarManual()">UBICAR</button>
             </div>
         </div>
 
@@ -153,34 +189,8 @@
 
         <button type="button" class="btn-enviar" onclick="generarPDFPoda()">GENERAR INFORME PODA</button>
     </form>
-</div>
-
-<!-- PANEL ADMINISTRATIVO CENTRAL -->
-<div id="admin-panel-container" class="container" style="display: none; max-width: 98%;">
-    <header>
-        <h1>PANEL DE CONTROL CENTRAL</h1>
-        <button class="btn-secundario" onclick="location.reload()">CERRAR SESIÓN</button>
-    </header>
-    <div class="card" style="overflow-x: auto; background: white; color: #333;">
-        <table style="width:100%; border-collapse: collapse; font-size: 0.75rem; min-width: 800px;">
-            <thead>
-                <tr style="background-color: #1b2a36; color: white; text-align: left;">
-                    <th style="padding: 10px;">Fecha Reg.</th>
-                    <th>Sector</th>
-                    <th>Circuito</th>
-                    <th>M. Brecha</th>
-                    <th>M. Poda</th>
-                    <th>Pago MO</th>
-                    <th>Mapa</th>
-                </tr>
-            </thead>
-            <tbody id="admin-tbody">
-                <!-- Se llena vía JS -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
+</div>	
+<!-- Script del proyecto -->
 <script src="app.js"></script>
 </body>
-</html>
+</html>	
