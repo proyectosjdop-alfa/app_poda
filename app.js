@@ -1,10 +1,11 @@
+// --- PARTE 1: CONFIGURACIÓN Y ACCESO ---
 var mapP, markerP;
 var gpsIni = "No marcado", gpsFin = "No marcado";
 var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 
-// CREDENCIALES
+// Diccionario de usuarios y contraseñas
 const USUARIOS = {
     "admin": "admin123",
     "brus laguna": "enee2026",
@@ -22,6 +23,9 @@ const USUARIOS = {
     "tocoa": "enee2026"
 };
 
+// URL de tu Worker en Cloudflare
+const API_URL = "https://api-poda.proyectos-jdop.workers.dev/";
+
 function validarLogin() {
     const u = document.getElementById('user').value.toLowerCase();
     const p = document.getElementById('pass').value;
@@ -29,27 +33,63 @@ function validarLogin() {
     if (USUARIOS[u] && USUARIOS[u] === p) {
         sectorActivo = u.toUpperCase();
         document.getElementById('login-container').style.display = 'none';
-        document.getElementById('form-poda-container').style.display = 'block';
-        document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
-        initMapPoda();
+        
+        if (u === "admin") {
+            // Activa el Panel Admin si el usuario es administrador
+            document.getElementById('admin-panel-container').style.display = 'block';
+            cargarDatosAdmin();
+        } else {
+            // Activa el Formulario de Poda para los sectores
+            document.getElementById('form-poda-container').style.display = 'block';
+            document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
+            initMapPoda();
+        }
     } else {
         document.getElementById('login-error').style.display = 'block';
     }
 }
 
+async function cargarDatosAdmin() {
+    const tbody = document.getElementById('admin-tbody');
+    tbody.innerHTML = "<tr><td colspan='7' style='padding:20px; text-align:center;'>Cargando base de datos central...</td></tr>";
+
+    try {
+        const res = await fetch(API_URL);
+        const datos = await res.json();
+        tbody.innerHTML = ""; 
+
+        datos.forEach(f => {
+            const fila = `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px;">${f.fecha_registro}</td>
+                    <td><b>${f.sector}</b></td>
+                    <td>${f.circuito}</td>
+                    <td>${f.m_brecha}m</td>
+                    <td>${f.m_poda}m</td>
+                    <td>L. ${f.pago_mo}</td>
+                    <td><a href="https://www.google.com/maps?q=${f.gps_inicio}" target="_blank" style="color:#2980b9; font-weight:bold;">📍 Ver</a></td>
+                </tr>
+            `;
+            tbody.innerHTML += fila;
+        });
+    } catch (e) {
+        tbody.innerHTML = "<tr><td colspan='7' style='color:red; text-align:center;'>Error de conexión con la base de datos.</td></tr>";
+    }
+}
+
+// --- PARTE 2: MAPAS Y MULTIMEDIA ---
 function initMapPoda() {
     if (mapP) mapP.remove();
     mapP = L.map('map-poda').setView([14.65, -86.21], 15);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri'
+        attribution: 'Esri'
     }).addTo(mapP);
     markerP = L.marker([14.65, -86.21], { draggable: true }).addTo(mapP);
+    
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
-            let lat = pos.coords.latitude;
-            let lng = pos.coords.longitude;
-            actualizarMarcador(lat, lng);
-        }, () => {}, {enableHighAccuracy: true});
+            actualizarMarcador(pos.coords.latitude, pos.coords.longitude);
+        }, null, {enableHighAccuracy: true});
     }
     setTimeout(() => mapP.invalidateSize(), 300);
 }
@@ -62,40 +102,36 @@ function actualizarMarcador(lat, lng) {
 function ingresarManual() {
     const lat = parseFloat(document.getElementById('manual-lat').value);
     const lng = parseFloat(document.getElementById('manual-lng').value);
-    if (!isNaN(lat) && !isNaN(lng)) {
-        actualizarMarcador(lat, lng);
-    } else {
-        alert("Por favor, ingrese valores numéricos válidos para Latitud y Longitud.");
-    }
+    if (!isNaN(lat) && !isNaN(lng)) actualizarMarcador(lat, lng);
 }
 
 function marcarGPS(tipo) {
     let p = markerP.getLatLng();
-    let lat = Number(p.lat.toFixed(6));
-    let lng = Number(p.lng.toFixed(6));
-    let c = lat + ", " + lng;
-    if (tipo === 'ini') { gpsIni = c; latIni = lat; lngIni = lng; } 
-    else { gpsFin = c; latFin = lat; lngFin = lng; }
+    let c = p.lat.toFixed(6) + ", " + p.lng.toFixed(6);
+    if (tipo === 'ini') { gpsIni = c; latIni = p.lat; lngIni = p.lng; } 
+    else { gpsFin = c; latFin = p.lat; lngFin = p.lng; }
     document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
 }
 
-// --- NUEVA FUNCIÓN DE CONEXIÓN A CLOUDFLARE D1 ---
-async function guardarEnBaseDeDatos(nombre, mensaje) {
-    const urlApi = "https://api-poda.proyectos-jdop.workers.dev/guardar";
-    try {
-        await fetch(urlApi, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ usuario: nombre, mensaje: mensaje })
-        });
-        console.log("Datos respaldados en Cloudflare");
-    } catch (error) {
-        console.error("Error de respaldo:", error);
+function previsualizar(input, idContenedor) {
+    const contenedor = document.getElementById(idContenedor);
+    contenedor.innerHTML = "";
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.width = "100%"; img.style.height = "100%"; img.style.objectFit = "cover";
+            contenedor.appendChild(img);
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 }
 
-async function generarPDFPoda() {
-    // 1. Recopilar datos para el respaldo
+// --- PARTE 3: RESPALDO Y GENERACIÓN DE PDF COMPLETO ---
+
+// Función para guardar los datos en Cloudflare D1
+async function respaldarEnCloudflare() {
     const datosRespaldo = {
         sector: sectorActivo,
         circuito: document.getElementById('poda-circuito').value,
@@ -113,17 +149,21 @@ async function generarPDFPoda() {
         resp_activ: document.getElementById('resp-activ').value
     };
 
-    // 2. Enviar a Cloudflare (Intento silencioso)
     try {
-        await fetch("https://api-poda.proyectos-jdop.workers.dev/", {
+        await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(datosRespaldo)
         });
-        console.log("✅ Respaldo exitoso en D1");
+        console.log("✅ Respaldo exitoso en la base de datos central");
     } catch (e) {
-        console.error("❌ Falló el respaldo, pero generaremos el PDF:", e);
+        console.error("❌ Error de red al respaldar, pero se procederá con el PDF:", e);
     }
+}
+
+async function generarPDFPoda() {
+    // 1. Ejecutar respaldo automático antes de generar el PDF
+    await respaldarEnCloudflare();
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -149,12 +189,10 @@ async function generarPDFPoda() {
     const logoImg = await getLogoBase64(logoUrl);
 
     const dibujarEstructuraInstitucional = () => {
-        // Marco de la hoja
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
         doc.rect(5, 5, 200, 287); 
 
-        // Cajetín encabezado
         doc.setLineWidth(0.3);
         doc.rect(10, 10, 190, 25); 
 
@@ -164,7 +202,6 @@ async function generarPDFPoda() {
         doc.line(150, 18, 200, 18);
         doc.line(150, 26, 200, 26);
 
-        // Logo insertado en la celda izquierda
         if (logoImg) {
             doc.addImage(logoImg, 'PNG', 12, 12, 45, 20);
         }
@@ -193,16 +230,13 @@ async function generarPDFPoda() {
         });
     };
 
-    // PÁGINA 1
-    // --- CONFIGURACIÓN INICIAL ---
+    // --- PÁGINA 1 ---
     dibujarEstructuraInstitucional();
     doc.setLineWidth(0.2);
-    // Dibujamos el rectángulo (ajusté el alto a 50 por si acaso)
     doc.rect(10, 40, 190, 45); 
     doc.setFontSize(9);
     let yD = 47;
 
-    // --- FILA 1: CIRCUITO Y ZONA DE TRABAJO ---
     doc.setFont("helvetica", "bold");
     doc.text("CIRCUITO:", 15, yD);
     doc.setFont("helvetica", "normal");
@@ -214,16 +248,12 @@ async function generarPDFPoda() {
     doc.text(document.getElementById('poda-zona').value, 133, yD);
     yD += 6;
 
-    // --- FILA 2: FECHA Y HORARIO ---
     doc.setFont("helvetica", "bold");
     doc.text("FECHA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    // Obtenemos la fecha del input (viene YYYY-MM-DD)
     let fechaInput = document.getElementById('poda-fecha').value; 
     let fechaFormateada = "";
-    
     if(fechaInput) {
-        // Dividimos el texto por el guion y lo reordenamos a dia-mes-año
         const [anio, mes, dia] = fechaInput.split("-");
         fechaFormateada = `${dia}-${mes}-${anio}`;
     }
@@ -233,15 +263,10 @@ async function generarPDFPoda() {
     doc.text("HORARIO:", 100, yD);
     doc.setFont("helvetica", "normal");
     let horario = `H.INICIO ${document.getElementById('h-ini').value}  / H.FINAL ${document.getElementById('h-fin').value}`;
-    doc.text(horario.substring(0, 55), 133, yD); // Acortamos un poco por si son muy largos
+    doc.text(horario.substring(0, 55), 133, yD);
     yD += 6;
 
-   // --- FILA 3: GPS (Inicial y Final en la misma línea con conversión UTM) ---
-    doc.setFont("helvetica", "bold");
-    doc.text("P. GPS INICIAL:", 15, yD);
-    doc.setFont("helvetica", "normal");
-
-    // Función interna de conversión para el reporte
+    // Conversión UTM para Reporte
     const convertirA_UTM = (lat, lng) => {
         if (!lat || !lng) return "No marcado";
         const a = 6378137.0; const eccSquared = 0.00669438; const k0 = 0.9996;
@@ -258,55 +283,50 @@ async function generarPDFPoda() {
         return `${Math.round(easting)}, ${Math.round(northing)}`;
     };
 
-    // Calculamos los valores UTM
     let utmIniReporte = convertirA_UTM(latIni, lngIni);
     let utmFinReporte = convertirA_UTM(latFin, lngFin);
 
-    // Escribimos el Inicial
+    doc.setFont("helvetica", "bold");
+    doc.text("P. GPS INICIAL:", 15, yD);
+    doc.setFont("helvetica", "normal");
     doc.text(`${utmIniReporte}`, 41, yD);
 
-    // Escribimos el Final en la segunda columna
     doc.setFont("helvetica", "bold");
     doc.text("P. GPS FINAL:", 100, yD);
     doc.setFont("helvetica", "normal");
     doc.text(`${utmFinReporte}`, 133, yD);
-
     yD += 6;
 
-    // --- FILA 4: PERSONAS Y RESPONSABLES ---
     doc.setFont("helvetica", "bold");
     doc.text("PERSONAS CONTRATADAS:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(document.getElementById('poda-personas').value, 60, yD);
 
     doc.setFont("helvetica", "bold");
-    doc.text("RESPONSABLES:", 100, yD); // X=100 para que quepan bien los nombres
+    doc.text("RESPONSABLES:", 100, yD); 
     doc.setFont("helvetica", "normal");
     let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
-    doc.text(resps.substring(0, 55), 133, yD); // Acortamos un poco por si son muy largos
+    doc.text(resps.substring(0, 55), 133, yD);
     yD += 6;
 
-    // --- FILA 5: PAGO MANO DE OBRA ---
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(`L. ${document.getElementById('pago-mo').value}`, 60, yD);
     yD += 6;
 
-    // --- FILA 6: PAGO TRANSPORTE ---
     doc.setFont("helvetica", "bold");
     doc.text("PAGO TRANSPORTE:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(`L. ${document.getElementById('pago-trans').value}`, 60, yD);
     yD += 6;
 
-    // --- FILA 7: TRABAJO EJECUTADO ---
     doc.setFont("helvetica", "bold");
     doc.text("TRABAJO EJECUTADO:", 15, yD);
     doc.setFont("helvetica", "normal");
     let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
     doc.text(trabajo, 60, yD);
-   
+
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
 
@@ -315,69 +335,56 @@ async function generarPDFPoda() {
         doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
         doc.rect(25, 95, 160, 95);
     }
-   if (fVehiculo) {
-        // Título de la foto
+    if (fVehiculo) {
         doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" }); // Título centrado
-
-        // Dimensiones para el formato Vertical (Retrato)
-        const vFotoW = 80; // Ancho reducido (mm)
-        const vFotoH = 85; // Alto aumentado (mm)
-        const centerX = (210 - vFotoW) / 2; // Cálculo para centrar en la hoja
-
-        // Insertar la imagen y el borde (rectángulo)
+        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
+        const vFotoW = 80; const vFotoH = 85; 
+        const centerX = (210 - vFotoW) / 2;
         doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
-        doc.rect(centerX, 202, vFotoW, vFotoH); // Borde ajustado a la nueva medida
+        doc.rect(centerX, 202, vFotoW, vFotoH);
     }
 
-    // --- PÁGINA 2: DNI LÍDER (Centrado y tamaño ID) ---
-const fLiderF = await leerFoto('f-lider-f');
-const fLiderR = await leerFoto('f-lider-r');
-
-if (fLiderF || fLiderR) {
-    doc.addPage();
-    dibujarEstructuraInstitucional();
-
-    const cardW = 85; // Ancho estándar ID mm
-    const cardH = 54; // Alto estándar ID mm
-    const centerX = (210 - cardW) / 2;
-
-    if (fLiderF) {
-        doc.setFont("helvetica", "bold");
-        doc.text("DNI LÍDER - FRONTAL", 105, 55, {align: "center"});
-        doc.addImage(fLiderF, 'JPEG', centerX, 60, cardW, cardH);
-        doc.rect(centerX, 60, cardW, cardH);
-    }
-
-    if (fLiderR) {
-        doc.setFont("helvetica", "bold");
-        doc.text("DNI LÍDER - REVÉS", 105, 135, {align: "center"});
-        doc.addImage(fLiderR, 'JPEG', centerX, 140, cardW, cardH);
-        doc.rect(centerX, 140, cardW, cardH);
-    }
-}
-
-// --- ACTUALIZACIÓN DE IDENTIDADES GRUPALES ---
-// Reemplaza tu bucle anterior de 'ids' por este que incluye las 4 fotos:
-const identidades = [
-    {id:'f-id-f', t:'DNI PERSONAL FRENTE (1)'}, 
-    {id:'f-id-r', t:'DNI PERSONAL REVÉS (1)'},
-    {id:'f-id-f2', t:'DNI PERSONAL FRENTE (2)'}, 
-    {id:'f-id-r2', t:'DNI PERSONAL REVÉS (2)'}
-];
-
-for(let p of identidades){
-    const img = await leerFoto(p.id);
-    if(img) {
+    // PÁGINA DNI LÍDER
+    const fLiderF = await leerFoto('f-lider-f');
+    const fLiderR = await leerFoto('f-lider-r');
+    if (fLiderF || fLiderR) {
         doc.addPage();
         dibujarEstructuraInstitucional();
-        doc.setFont("helvetica", "bold");
-        doc.text(p.t, 105, 45, {align: "center"});
-        doc.addImage(img, 'JPEG', 15, 50, 180, 230); // Estas siguen ocupando la hoja
-        doc.rect(15, 50, 180, 230);
+        const cardW = 85; const cardH = 54; const centerX = (210 - cardW) / 2;
+        if (fLiderF) {
+            doc.setFont("helvetica", "bold");
+            doc.text("DNI LÍDER - FRONTAL", 105, 55, {align: "center"});
+            doc.addImage(fLiderF, 'JPEG', centerX, 60, cardW, cardH);
+            doc.rect(centerX, 60, cardW, cardH);
+        }
+        if (fLiderR) {
+            doc.setFont("helvetica", "bold");
+            doc.text("DNI LÍDER - REVÉS", 105, 135, {align: "center"});
+            doc.addImage(fLiderR, 'JPEG', centerX, 140, cardW, cardH);
+            doc.rect(centerX, 140, cardW, cardH);
+        }
     }
-}
 
+    // IDENTIDADES GRUPALES
+    const identidades = [
+        {id:'f-id-f', t:'DNI PERSONAL FRENTE (1)'}, 
+        {id:'f-id-r', t:'DNI PERSONAL REVÉS (1)'},
+        {id:'f-id-f2', t:'DNI PERSONAL FRENTE (2)'}, 
+        {id:'f-id-r2', t:'DNI PERSONAL REVÉS (2)'}
+    ];
+    for(let p of identidades){
+        const img = await leerFoto(p.id);
+        if(img) {
+            doc.addPage();
+            dibujarEstructuraInstitucional();
+            doc.setFont("helvetica", "bold");
+            doc.text(p.t, 105, 45, {align: "center"});
+            doc.addImage(img, 'JPEG', 15, 50, 180, 230);
+            doc.rect(15, 50, 180, 230);
+        }
+    }
+
+    // FOTOS ANTES, DURANTE Y DESPUÉS
     doc.addPage();
     dibujarEstructuraInstitucional();
     const secciones = [
@@ -398,20 +405,4 @@ for(let p of identidades){
     }
 
     doc.save(`Informe_Poda_${sectorActivo}.pdf`);
-}
-
-function previsualizar(input, idContenedor) {
-    const contenedor = document.getElementById(idContenedor);
-    contenedor.innerHTML = "";
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.style.width = "100%"; img.style.height = "100%";
-            img.style.objectFit = "cover"; img.style.borderRadius = "4px";
-            contenedor.appendChild(img);
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
 }
