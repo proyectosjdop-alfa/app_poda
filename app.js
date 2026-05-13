@@ -79,8 +79,27 @@ function marcarGPS(tipo) {
     document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
 }
 
+// --- NUEVA FUNCIÓN DE CONEXIÓN A CLOUDFLARE D1 ---
+async function guardarEnBaseDeDatos(nombre, mensaje) {
+    const urlApi = "https://api-poda.proyectos-jdop.workers.dev/guardar";
+    try {
+        await fetch(urlApi, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuario: nombre, mensaje: mensaje })
+        });
+        console.log("Datos respaldados en Cloudflare");
+    } catch (error) {
+        console.error("Error de respaldo:", error);
+    }
+}
+
 async function generarPDFPoda() {
-    try { enviarDatosCloudflare(); } catch(e) {}
+    // Intentar guardar en la base de datos sin bloquear la generación del PDF
+    try { 
+        const circ = document.getElementById('poda-circuito').value;
+        guardarEnBaseDeDatos(sectorActivo, `Generó informe del circuito: ${circ}`); 
+    } catch(e) { console.log("Error silencioso en DB"); }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -371,19 +390,4 @@ function previsualizar(input, idContenedor) {
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
-
-function enviarDatosCloudflare() {
-    const data = {
-        sector: sectorActivo,
-        circuito: document.getElementById('poda-circuito').value,
-        zona_trabajo: document.getElementById('poda-zona').value,
-        fecha_envio: new Date().toISOString()
-    };
-    fetch("https://api-cuadrillas.cgujuticalpa.workers.dev/", {
-        method: "POST",
-        mode: "no-cors", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    }).catch(() => {}); 
 }
