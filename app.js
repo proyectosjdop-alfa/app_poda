@@ -95,11 +95,35 @@ async function guardarEnBaseDeDatos(nombre, mensaje) {
 }
 
 async function generarPDFPoda() {
-    // Intentar guardar en la base de datos sin bloquear la generación del PDF
-    try { 
-        const circ = document.getElementById('poda-circuito').value;
-        guardarEnBaseDeDatos(sectorActivo, `Generó informe del circuito: ${circ}`); 
-    } catch(e) { console.log("Error silencioso en DB"); }
+    // 1. Recopilar datos para el respaldo
+    const datosRespaldo = {
+        sector: sectorActivo,
+        circuito: document.getElementById('poda-circuito').value,
+        zona: document.getElementById('poda-zona').value,
+        fecha: document.getElementById('poda-fecha').value,
+        personas: document.getElementById('poda-personas').value,
+        brecha: document.getElementById('m-brecha').value,
+        poda: document.getElementById('m-poda').value,
+        postes: document.getElementById('m-postes').value,
+        pago_mo: document.getElementById('pago-mo').value,
+        pago_trans: document.getElementById('pago-trans').value,
+        gps_ini: gpsIni,
+        gps_fin: gpsFin,
+        resp_super: document.getElementById('resp-super').value,
+        resp_activ: document.getElementById('resp-activ').value
+    };
+
+    // 2. Enviar a Cloudflare (Intento silencioso)
+    try {
+        await fetch("https://api-poda.proyectos-jdop.workers.dev/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datosRespaldo)
+        });
+        console.log("✅ Respaldo exitoso en D1");
+    } catch (e) {
+        console.error("❌ Falló el respaldo, pero generaremos el PDF:", e);
+    }
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
