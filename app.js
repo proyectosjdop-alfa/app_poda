@@ -359,12 +359,6 @@ async function generarPDFPoda() {
     const pdfBlobResult = doc.output('blob');
     await enviarArchivoAR2(pdfBlobResult, `Informe_${sectorActivo}_${ID_UNICO}.pdf`, "application/pdf");
 
-    // Subir la foto del grupo si existe
-    if (document.getElementById('f-grupo').files[0]) {
-        const fotoFile = document.getElementById('f-grupo').files[0];
-        await enviarArchivoAR2(fotoFile, `Evidencia_${sectorActivo}_${ID_UNICO}.jpg`, "image/jpeg");
-    }
-
     // 4. Descarga local para el técnico
     doc.save(`Informe_Poda_${sectorActivo}.pdf`);
     alert("✅ Proceso completado: Reporte guardado y archivos respaldados en la nube.");
