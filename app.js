@@ -99,28 +99,20 @@ async function enviarArchivoAR2(archivo, nombre, tipo) {
     }
 }
 
-async function guardarEnBaseDeDatos(nombre, mensaje) {
-    const urlApi = "https://api-poda.proyectos-jdop.workers.dev/guardar";
-    try {
-        await fetch(urlApi, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ usuario: nombre, mensaje: mensaje })
-        });
-        console.log("Datos respaldados en Cloudflare");
-    } catch (error) {
-        console.error("Error de respaldo:", error);
-    }
-}
-
 async function generarPDFPoda() {
-    // --- NUEVO CÓDIGO PARA ID PREDECIBLE ---
-    const fechaLimpia = document.getElementById('poda-fecha').value.replace(/-/g, ""); // Ej: 20260515
-    const circuitoLimpio = document.getElementById('poda-circuito').value.replace(/\s+/g, "_"); // Ej: L501
-    const ID_UNICO = `${fechaLimpia}_${circuitoLimpio}`; 
-    // Esto generará un nombre como: Informe_JUTICALPA_20260515_L501.pdf
+    // --- CAPTURA DE DATOS NUEVOS Y CONFIGURACIÓN DE ID ---
+    const numEnergis = document.getElementById('poda-energis').value.trim();
+    
+    // Validación básica para no enviar reportes sin número
+    if (!numEnergis) {
+        alert("Por favor, ingrese el Número de Reporte ENERGIS antes de generar.");
+        return;
+    }
 
-    // 1. Recopilar datos para el respaldo
+    const circuitoLimpio = document.getElementById('poda-circuito').value.replace(/\s+/g, "_"); 
+    const nombreArchivoFinal = `Informe_${sectorActivo}_${circuitoLimpio}_${numEnergis}.pdf`;
+
+    // 1. Recopilar datos para el respaldo en D1
     const datosRespaldo = {
         sector: sectorActivo,
         circuito: document.getElementById('poda-circuito').value,
@@ -135,7 +127,8 @@ async function generarPDFPoda() {
         gps_ini: gpsIni,
         gps_fin: gpsFin,
         resp_super: document.getElementById('resp-super').value,
-        resp_activ: document.getElementById('resp-activ').value
+        resp_activ: document.getElementById('resp-activ').value,
+        reporte_energis: numEnergis // <-- CAMBIO: Se añade para la base de datos
     };
 
     // 2. Enviar a Cloudflare D1
@@ -189,7 +182,7 @@ async function generarPDFPoda() {
         doc.text("INFORME DE PODA COMUNITARIA", 105, 19, {align: "center"});
         doc.text("SECTOR: " + sectorActivo, 105, 27, {align: "center"});
         doc.setFontSize(8);
-        doc.text("Código", 152, 15);
+        doc.text("ENERGIS: " + numEnergis, 152, 15); // <-- CAMBIO: Mostrar el número en el encabezado del PDF
         doc.text("Versión", 152, 23);
         doc.setFont("helvetica", "normal");
         doc.text("1", 185, 23, {align: "center"}); 
@@ -310,7 +303,7 @@ async function generarPDFPoda() {
         doc.rect(centerX, 202, vFotoW, vFotoH);
     }
 
-    // --- MANEJO DE IDENTIDADES Y OTRAS PÁGINAS (TUS BUCLES EXISTENTES) ---
+    // --- MANEJO DE IDENTIDADES Y OTRAS PÁGINAS ---
     const fLiderF = await leerFoto('f-lider-f');
     const fLiderR = await leerFoto('f-lider-r');
     if (fLiderF || fLiderR) {
@@ -357,13 +350,12 @@ async function generarPDFPoda() {
         yImg += 75;
     }
 
-    // --- 3. SUBIDA AUTOMÁTICA A R2 (PDF y FOTO) ---
-    // Subir el PDF
+    // --- SUBIDA AUTOMÁTICA A R2 ---
     const pdfBlobResult = doc.output('blob');
-    await enviarArchivoAR2(pdfBlobResult, `Informe_${sectorActivo}_${ID_UNICO}.pdf`, "application/pdf");
+    await enviarArchivoAR2(pdfBlobResult, nombreArchivoFinal, "application/pdf");
 
-    // 4. Descarga local para el técnico
-    doc.save(`Informe_Poda_${sectorActivo}.pdf`);
+    // Descarga local
+    doc.save(nombreArchivoFinal);
     alert("✅ Proceso completado: Reporte guardado y archivos respaldados en la nube.");
 }
 
