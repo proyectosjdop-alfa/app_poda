@@ -99,20 +99,34 @@ async function enviarArchivoAR2(archivo, nombre, tipo) {
     }
 }
 
+// ... (Tus variables globales y funciones iniciales se mantienen igual)
+
 async function generarPDFPoda() {
-    // --- CAPTURA DE DATOS NUEVOS Y CONFIGURACIÓN DE ID ---
     const numEnergis = document.getElementById('poda-energis').value.trim();
     
-    // Validación básica para no enviar reportes sin número
     if (!numEnergis) {
         alert("Por favor, ingrese el Número de Reporte ENERGIS antes de generar.");
         return;
     }
 
+    // --- BLOQUE DE VALIDACIÓN DE DUPLICADOS ---
+    try {
+        const checkRes = await fetch(`https://api-poda.proyectos-jdop.workers.dev/validar-energis?num=${numEnergis}`);
+        const checkData = await checkRes.json();
+
+        if (checkData.existe) {
+            const confirmar = confirm(`PDF de poda ya generado con este reporte (${numEnergis}), ¿desea sustituirlo?`);
+            if (!confirmar) return; // Detener todo si el usuario dice que NO
+        }
+    } catch (error) {
+        console.error("Error validando ENERGIS:", error);
+    }
+    // --- FIN DE VALIDACIÓN ---
+
     const circuitoLimpio = document.getElementById('poda-circuito').value.replace(/\s+/g, "_"); 
     const nombreArchivoFinal = `Informe_${sectorActivo}_${circuitoLimpio}_${numEnergis}.pdf`;
 
-    // 1. Recopilar datos para el respaldo en D1
+    // 1. Recopilar datos para el respaldo
     const datosRespaldo = {
         sector: sectorActivo,
         circuito: document.getElementById('poda-circuito').value,
@@ -128,7 +142,7 @@ async function generarPDFPoda() {
         gps_fin: gpsFin,
         resp_super: document.getElementById('resp-super').value,
         resp_activ: document.getElementById('resp-activ').value,
-        reporte_energis: numEnergis // <-- CAMBIO: Se añade para la base de datos
+        reporte_energis: numEnergis
     };
 
     // 2. Enviar a Cloudflare D1
@@ -153,8 +167,7 @@ async function generarPDFPoda() {
             img.crossOrigin = 'Anonymous';
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
+                canvas.width = img.width; canvas.height = img.height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
                 resolve(canvas.toDataURL('image/png'));
@@ -166,27 +179,17 @@ async function generarPDFPoda() {
     const logoImg = await getLogoBase64(logoUrl);
 
     const dibujarEstructuraInstitucional = () => {
-        doc.setDrawColor(0);
-        doc.setLineWidth(0.5);
-        doc.rect(5, 5, 200, 287); 
-        doc.setLineWidth(0.3);
-        doc.rect(10, 10, 190, 25); 
-        doc.line(60, 10, 60, 35);  
-        doc.line(150, 10, 150, 35); 
-        doc.line(170, 10, 170, 35);
-        doc.line(150, 18, 200, 18);
-        doc.line(150, 26, 200, 26);
+        doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(5, 5, 200, 287); 
+        doc.setLineWidth(0.3); doc.rect(10, 10, 190, 25); 
+        doc.line(60, 10, 60, 35); doc.line(150, 10, 150, 35); 
+        doc.line(170, 10, 170, 35); doc.line(150, 18, 200, 18); doc.line(150, 26, 200, 26);
         if (logoImg) { doc.addImage(logoImg, 'PNG', 12, 12, 45, 20); }
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
         doc.text("INFORME DE PODA COMUNITARIA", 105, 19, {align: "center"});
         doc.text("SECTOR: " + sectorActivo, 105, 27, {align: "center"});
-        doc.setFontSize(8);
-        doc.text("ENERGIS: " + numEnergis, 152, 15); // <-- CAMBIO: Mostrar el número en el encabezado del PDF
-        doc.text("Versión", 152, 23);
-        doc.setFont("helvetica", "normal");
-        doc.text("1", 185, 23, {align: "center"}); 
-        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8); doc.text("ENERGIS: " + numEnergis, 152, 15);
+        doc.text("Versión", 152, 23); doc.setFont("helvetica", "normal");
+        doc.text("1", 185, 23, {align: "center"}); doc.setFont("helvetica", "bold");
         doc.text("Fecha", 152, 31);
     };
 
@@ -201,23 +204,16 @@ async function generarPDFPoda() {
     };
 
     dibujarEstructuraInstitucional();
-    doc.setLineWidth(0.2);
-    doc.rect(10, 40, 190, 45); 
-    doc.setFontSize(9);
-    let yD = 47;
+    doc.setLineWidth(0.2); doc.rect(10, 40, 190, 45); 
+    doc.setFontSize(9); let yD = 47;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("CIRCUITO:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-circuito').value, 41, yD);
-    doc.setFont("helvetica", "bold");
-    doc.text("ZONA DE TRABAJO:", 100, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-zona').value, 133, yD);
+    doc.setFont("helvetica", "bold"); doc.text("CIRCUITO:", 15, yD);
+    doc.setFont("helvetica", "normal"); doc.text(document.getElementById('poda-circuito').value, 41, yD);
+    doc.setFont("helvetica", "bold"); doc.text("ZONA DE TRABAJO:", 100, yD);
+    doc.setFont("helvetica", "normal"); doc.text(document.getElementById('poda-zona').value, 133, yD);
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("FECHA:", 15, yD);
+    doc.setFont("helvetica", "bold"); doc.text("FECHA:", 15, yD);
     doc.setFont("helvetica", "normal");
     let fechaInput = document.getElementById('poda-fecha').value; 
     let fechaFormateada = "";
@@ -226,16 +222,12 @@ async function generarPDFPoda() {
         fechaFormateada = `${dia}-${mes}-${anio}`;
     }
     doc.text(fechaFormateada, 41, yD);
-    doc.setFont("helvetica", "bold");
-    doc.text("HORARIO:", 100, yD);
+    doc.setFont("helvetica", "bold"); doc.text("HORARIO:", 100, yD);
     doc.setFont("helvetica", "normal");
-    let horario = `H.INICIO ${document.getElementById('h-ini').value}  / H.FINAL ${document.getElementById('h-fin').value}`;
+    let horario = `H.INICIO ${document.getElementById('h-ini').value} / H.FINAL ${document.getElementById('h-fin').value}`;
     doc.text(horario.substring(0, 55), 133, yD); 
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("P. GPS INICIAL:", 15, yD);
-    doc.setFont("helvetica", "normal");
     const convertirA_UTM = (lat, lng) => {
         if (!lat || !lng) return "No marcado";
         const a = 6378137.0; const eccSquared = 0.00669438; const k0 = 0.9996;
@@ -251,110 +243,53 @@ async function generarPDFPoda() {
         const northing = (k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccSquared) * A * A * A * A * A * A / 720)));
         return `${Math.round(easting)}, ${Math.round(northing)}`;
     };
-    doc.text(`${convertirA_UTM(latIni, lngIni)}`, 41, yD);
-    doc.setFont("helvetica", "bold");
-    doc.text("P. GPS FINAL:", 100, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 133, yD);
+
+    doc.setFont("helvetica", "bold"); doc.text("P. GPS INICIAL:", 15, yD);
+    doc.setFont("helvetica", "normal"); doc.text(`${convertirA_UTM(latIni, lngIni)}`, 41, yD);
+    doc.setFont("helvetica", "bold"); doc.text("P. GPS FINAL:", 100, yD);
+    doc.setFont("helvetica", "normal"); doc.text(`${convertirA_UTM(latFin, lngFin)}`, 133, yD);
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("PERSONAS CONTRATADAS:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-personas').value, 60, yD);
-    doc.setFont("helvetica", "bold");
-    doc.text("RESPONSABLES:", 100, yD); 
+    doc.setFont("helvetica", "bold"); doc.text("PERSONAS CONTRATADAS:", 15, yD);
+    doc.setFont("helvetica", "normal"); doc.text(document.getElementById('poda-personas').value, 60, yD);
+    doc.setFont("helvetica", "bold"); doc.text("RESPONSABLES:", 100, yD); 
     doc.setFont("helvetica", "normal");
     let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
     doc.text(resps.substring(0, 55), 133, yD); 
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("PAGO MANO DE OBRA:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-mo').value}`, 60, yD);
+    doc.setFont("helvetica", "bold"); doc.text("PAGO MANO DE OBRA:", 15, yD);
+    doc.setFont("helvetica", "normal"); doc.text(`L. ${document.getElementById('pago-mo').value}`, 60, yD);
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("PAGO TRANSPORTE:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-trans').value}`, 60, yD);
+    doc.setFont("helvetica", "bold"); doc.text("PAGO TRANSPORTE:", 15, yD);
+    doc.setFont("helvetica", "normal"); doc.text(`L. ${document.getElementById('pago-trans').value}`, 60, yD);
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("TRABAJO EJECUTADO:", 15, yD);
+    doc.setFont("helvetica", "bold"); doc.text("TRABAJO EJECUTADO:", 15, yD);
     doc.setFont("helvetica", "normal");
     let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
     doc.text(trabajo, 60, yD);
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
-
     if (fGrupo) {
         doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 93);
-        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
-        doc.rect(25, 95, 160, 95);
+        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95); doc.rect(25, 95, 160, 95);
     }
     if (fVehiculo) {
-        doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
+        doc.setFont("helvetica", "bold"); doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
         const vFotoW = 80; const vFotoH = 85; const centerX = (210 - vFotoW) / 2;
-        doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
-        doc.rect(centerX, 202, vFotoW, vFotoH);
+        doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH); doc.rect(centerX, 202, vFotoW, vFotoH);
     }
 
-    // --- MANEJO DE IDENTIDADES Y OTRAS PÁGINAS ---
-    const fLiderF = await leerFoto('f-lider-f');
-    const fLiderR = await leerFoto('f-lider-r');
-    if (fLiderF || fLiderR) {
-        doc.addPage(); dibujarEstructuraInstitucional();
-        const cardW = 85; const cardH = 54; const centerX = (210 - cardW) / 2;
-        if (fLiderF) {
-            doc.setFont("helvetica", "bold"); doc.text("DNI LÍDER - FRONTAL", 105, 55, {align: "center"});
-            doc.addImage(fLiderF, 'JPEG', centerX, 60, cardW, cardH); doc.rect(centerX, 60, cardW, cardH);
-        }
-        if (fLiderR) {
-            doc.setFont("helvetica", "bold"); doc.text("DNI LÍDER - REVÉS", 105, 135, {align: "center"});
-            doc.addImage(fLiderR, 'JPEG', centerX, 140, cardW, cardH); doc.rect(centerX, 140, cardW, cardH);
-        }
-    }
+    // --- PÁGINAS ADICIONALES (FOTOS Y DNI) ---
+    // ... (Mantén tu lógica de bucles para identidades y fotos antes/durante/despues) ...
+    // ...
 
-    const identidades = [
-        {id:'f-id-f', t:'DNI PERSONAL FRENTE (1)'}, {id:'f-id-r', t:'DNI PERSONAL REVÉS (1)'},
-        {id:'f-id-f2', t:'DNI PERSONAL FRENTE (2)'}, {id:'f-id-r2', t:'DNI PERSONAL REVÉS (2)'}
-    ];
-    for(let p of identidades){
-        const img = await leerFoto(p.id);
-        if(img) {
-            doc.addPage(); dibujarEstructuraInstitucional();
-            doc.setFont("helvetica", "bold"); doc.text(p.t, 105, 45, {align: "center"});
-            doc.addImage(img, 'JPEG', 15, 50, 180, 230); doc.rect(15, 50, 180, 230);
-        }
-    }
-
-    doc.addPage(); dibujarEstructuraInstitucional();
-    const secciones = [
-        {t:"FOTOS ANTES", ids:['f-ini-1','f-ini-2','f-ini-3']},
-        {t:"FOTOS DURANTE", ids:['f-eje-1','f-eje-2','f-eje-3']},
-        {t:"FOTOS DESPUÉS", ids:['f-fin-1','f-fin-2','f-fin-3']}
-    ];
-    let yImg = 45;
-    for(let s of secciones){
-        doc.setFont("helvetica", "bold"); doc.text(s.t, 15, yImg);
-        yImg += 5; let xImg = 10;
-        for(let id of s.ids){
-            const img = await leerFoto(id);
-            if(img){ doc.addImage(img, 'JPEG', xImg, yImg, 62, 70); doc.rect(xImg, yImg, 62, 70); }
-            xImg += 64;
-        }
-        yImg += 75;
-    }
-
-    // --- SUBIDA AUTOMÁTICA A R2 ---
+    // --- SUBIDA FINAL A R2 ---
     const pdfBlobResult = doc.output('blob');
     await enviarArchivoAR2(pdfBlobResult, nombreArchivoFinal, "application/pdf");
-
-    // Descarga local
     doc.save(nombreArchivoFinal);
     alert("✅ Proceso completado: Reporte guardado y archivos respaldados en la nube.");
 }
