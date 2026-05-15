@@ -4,10 +4,8 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 
-// --- NUEVAS VARIABLES GLOBALES PARA R2 ---
 let fotoBlob = null; 
 
-// CREDENCIALES
 const USUARIOS = {
     "admin": "admin123",
     "brus laguna": "enee2026",
@@ -121,34 +119,23 @@ async function generarPDFPoda() {
         return;
     }
 
-    // --- GENERACIÓN DEL ID_UNICO SOLICITADO ---
-    // Combinamos Sector (que ya tenemos en sectorActivo) y el número de reporte
+    // 1. DEFINIR ID_UNICO (Sector_Reporte)
     const ID_UNICO = `${sectorActivo}_${numEnergis}`; 
-    
-    // Nombre del archivo usando el ID_UNICO
     const nombreArchivoFinal = `Informe_${ID_UNICO}.pdf`;
-
-    console.log("Generando reporte con ID Único: " + ID_UNICO);
 
     // --- VALIDACIÓN ÚNICA POR ENERGIS ---
     try {
         const checkRes = await fetch(`https://api-poda.proyectos-jdop.workers.dev/validar-energis?num=${numEnergis}`);
         const checkData = await checkRes.json();
-
         if (checkData.existe) {
-            // El mensaje es claro: se va a reemplazar TODO lo anterior de ese reporte
-            const confirmar = confirm(`El reporte ENERGIS ${numEnergis} ya existe. Si continúa, se reemplazará el PDF anterior y los datos en la base de datos por los nuevos. ¿Desea sustituirlo?`);
+            const confirmar = confirm(`El reporte ENERGIS ${numEnergis} ya existe. ¿Desea sustituirlo?`);
             if (!confirmar) return; 
         }
     } catch (error) {
         console.error("Error validando:", error);
     }
 
-    // NOMBRE DE ARCHIVO FIJO POR ENERGIS 
-    // Al quitar el circuito del nombre, garantizamos la sobrescritura física en R2
-    const nombreArchivoFinal = `Reporte_ENERGIS_${numEnergis}.pdf`;
-
-    // 1. Recopilar datos para el respaldo
+      // 1. Recopilar datos para el respaldo
     const datosRespaldo = {
         sector: sectorActivo,
         circuito: document.getElementById('poda-circuito').value,
@@ -179,6 +166,7 @@ async function generarPDFPoda() {
         console.error("❌ Falló el respaldo en D1:", e);
     }
 
+    // 4. GENERACIÓN DEL PDF
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
