@@ -114,8 +114,11 @@ async function guardarEnBaseDeDatos(nombre, mensaje) {
 }
 
 async function generarPDFPoda() {
-    // 0. Preparar ID único para vinculación de archivos
-    const ID_UNICO = Date.now();
+    // --- NUEVO CÓDIGO PARA ID PREDECIBLE ---
+    const fechaLimpia = document.getElementById('poda-fecha').value.replace(/-/g, ""); // Ej: 20260515
+    const circuitoLimpio = document.getElementById('poda-circuito').value.replace(/\s+/g, "_"); // Ej: L501
+    const ID_UNICO = `${fechaLimpia}_${circuitoLimpio}`; 
+    // Esto generará un nombre como: Informe_JUTICALPA_20260515_L501.pdf
 
     // 1. Recopilar datos para el respaldo
     const datosRespaldo = {
