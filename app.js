@@ -105,26 +105,27 @@ async function generarPDFPoda() {
     const numEnergis = document.getElementById('poda-energis').value.trim();
     
     if (!numEnergis) {
-        alert("Por favor, ingrese el Número de Reporte ENERGIS antes de generar.");
+        alert("Por favor, ingrese el Número de Reporte ENERGIS.");
         return;
     }
 
-    // --- BLOQUE DE VALIDACIÓN DE DUPLICADOS ---
+    // --- VALIDACIÓN ÚNICA POR ENERGIS ---
     try {
         const checkRes = await fetch(`https://api-poda.proyectos-jdop.workers.dev/validar-energis?num=${numEnergis}`);
         const checkData = await checkRes.json();
 
         if (checkData.existe) {
-            const confirmar = confirm(`PDF de poda ya generado con este reporte (${numEnergis}), ¿desea sustituirlo?`);
-            if (!confirmar) return; // Detener todo si el usuario dice que NO
+            // El mensaje es claro: se va a reemplazar TODO lo anterior de ese reporte
+            const confirmar = confirm(`El reporte ENERGIS ${numEnergis} ya existe. Si continúa, se reemplazará el PDF anterior y los datos en la base de datos por los nuevos. ¿Desea sustituirlo?`);
+            if (!confirmar) return; 
         }
     } catch (error) {
-        console.error("Error validando ENERGIS:", error);
+        console.error("Error validando:", error);
     }
-    // --- FIN DE VALIDACIÓN ---
 
-    const circuitoLimpio = document.getElementById('poda-circuito').value.replace(/\s+/g, "_"); 
-    const nombreArchivoFinal = `Informe_${sectorActivo}_${circuitoLimpio}_${numEnergis}.pdf`;
+    // NOMBRE DE ARCHIVO FIJO POR ENERGIS 
+    // Al quitar el circuito del nombre, garantizamos la sobrescritura física en R2
+    const nombreArchivoFinal = `Reporte_ENERGIS_${numEnergis}.pdf`;
 
     // 1. Recopilar datos para el respaldo
     const datosRespaldo = {
