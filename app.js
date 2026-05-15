@@ -121,6 +121,15 @@ async function generarPDFPoda() {
         return;
     }
 
+    // --- GENERACIÓN DEL ID_UNICO SOLICITADO ---
+    // Combinamos Sector (que ya tenemos en sectorActivo) y el número de reporte
+    const ID_UNICO = `${sectorActivo}_${numEnergis}`; 
+    
+    // Nombre del archivo usando el ID_UNICO
+    const nombreArchivoFinal = `Informe_${ID_UNICO}.pdf`;
+
+    console.log("Generando reporte con ID Único: " + ID_UNICO);
+
     // --- VALIDACIÓN ÚNICA POR ENERGIS ---
     try {
         const checkRes = await fetch(`https://api-poda.proyectos-jdop.workers.dev/validar-energis?num=${numEnergis}`);
@@ -379,12 +388,16 @@ async function generarPDFPoda() {
 
     // --- 3. SUBIDA AUTOMÁTICA A R2 (PDF y FOTO) ---
     // Subir el PDF
-    const pdfBlobResult = doc.output('blob');
-    await enviarArchivoAR2(pdfBlobResult, `Informe_${sectorActivo}_${ID_UNICO}.pdf`, "application/pdf");
+    try {
+        const pdfBlobResult = doc.output('blob');
+        await enviarArchivoAR2(pdfBlobResult, nombreArchivoFinal, "application/pdf");
+    } catch (e) {
+        console.error("Error subiendo a R2:", e);
+    }
 
-    // 4. Descarga local para el técnico
-    doc.save(`Informe_Poda_${sectorActivo}.pdf`);
-    alert("✅ Proceso completado: Reporte guardado y archivos respaldados en la nube.");
+    // Descarga local
+    doc.save(nombreArchivoFinal);
+    alert("✅ Proceso completado para el ID: " + ID_UNICO);
 }
 
 function previsualizar(input, idContenedor) {
