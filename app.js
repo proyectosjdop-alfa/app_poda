@@ -1,10 +1,10 @@
 var mapP, markerP;
-var markerIni, markerFin; // Nuevos marcadores fijos
+var markerIni, markerFin; 
 var gpsIni = "No marcado", gpsFin = "No marcado";
 var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
-let CIRCUITOS_DATABASE = {}; // Base de datos desde Google Sheets
+let CIRCUITOS_DATABASE = {}; 
 
 // --- 1. CARGA DINÁMICA DE CIRCUITOS DESDE GOOGLE SHEETS ---
 async function precargarCircuitosDesdeSheets() {
@@ -28,13 +28,15 @@ async function precargarCircuitosDesdeSheets() {
             }
         });
         CIRCUITOS_DATABASE = temporalDB;
-        console.log("✅ Circuitos sincronizados con Google Sheets");
+        console.log("✅ Circuitos sincronizados");
+        
+        // Si el usuario ya se logueó pero los circuitos tardaron en cargar, actualizamos
+        if(sectorActivo) actualizarListaCircuitos(sectorActivo);
     } catch (error) {
         console.error("❌ Error cargando circuitos:", error);
     }
 }
 
-// Cargar al iniciar
 precargarCircuitosDesdeSheets();
 
 const USUARIOS = {
@@ -55,7 +57,7 @@ function validarLogin() {
         document.getElementById('form-poda-container').style.display = 'block';
         document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
         
-        actualizarListaCircuitos(sectorActivo); // Llenar el select
+        actualizarListaCircuitos(sectorActivo); 
         initMapPoda();
     } else {
         document.getElementById('login-error').style.display = 'block';
@@ -64,9 +66,16 @@ function validarLogin() {
 
 function actualizarListaCircuitos(sector) {
     const select = document.getElementById('poda-circuito');
+    if (!select) return;
+    
     select.innerHTML = '<option value="">Seleccione un circuito...</option>';
     const lista = CIRCUITOS_DATABASE[sector] || [];
     
+    if (lista.length === 0) {
+        select.innerHTML = '<option value="">Cargando o sin datos...</option>';
+        return;
+    }
+
     lista.forEach(c => {
         let opt = document.createElement('option');
         opt.value = c;
@@ -75,7 +84,7 @@ function actualizarListaCircuitos(sector) {
     });
 }
 
-// --- 2. GESTIÓN DEL MAPA Y CAPAS ---
+// --- 2. MAPA Y GEOPOSICIÓN ---
 async function initMapPoda() {
     if (mapP) mapP.remove();
     mapP = L.map('map-poda').setView([14.65, -86.21], 13);
@@ -84,14 +93,11 @@ async function initMapPoda() {
         attribution: 'Tiles &copy; Esri'
     }).addTo(mapP);
 
-    // Cargar Capa GeoJSON de Circuitos (Red Primaria)
     try {
         const geoRes = await fetch("https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/main/Circuitos%20Juticalpa.geojson");
         const geoData = await geoRes.json();
-        L.geoJSON(geoData, {
-            style: { color: "#f1c40f", weight: 2, opacity: 0.5 }
-        }).addTo(mapP);
-    } catch(e) { console.warn("No se pudo cargar la capa GeoJSON"); }
+        L.geoJSON(geoData, { style: { color: "#f1c40f", weight: 2, opacity: 0.5 } }).addTo(mapP);
+    } catch(e) { console.warn("GeoJSON no disponible"); }
 
     markerP = L.marker([14.65, -86.21], { draggable: true }).addTo(mapP);
 
@@ -108,7 +114,6 @@ function actualizarMarcador(lat, lng) {
     markerP.setLatLng([lat, lng]);
 }
 
-// --- 3. UBICACIÓN MANUAL SEGÚN INTERFAZ NUEVA ---
 function ubicarManual(tipo) {
     let lat, lng;
     if(tipo === 'ini') {
@@ -118,15 +123,9 @@ function ubicarManual(tipo) {
         lat = parseFloat(document.getElementById('manual-lat-fin').value);
         lng = parseFloat(document.getElementById('manual-lng-fin').value);
     }
-
-    if (!isNaN(lat) && !isNaN(lng)) {
-        actualizarMarcador(lat, lng);
-    } else {
-        alert("Ingrese coordenadas válidas.");
-    }
+    if (!isNaN(lat) && !isNaN(lng)) { actualizarMarcador(lat, lng); }
 }
 
-// --- 4. MARCADO DE PUNTOS FIJOS (CHINCHETAS) ---
 function marcarGPS(tipo) {
     let p = markerP.getLatLng();
     let lat = Number(p.lat.toFixed(6));
@@ -155,14 +154,30 @@ function marcarGPS(tipo) {
     }
 }
 
-// --- 5. MÁSCARA DE MONEDA ---
 function formatearMoneda(input) {
-    let valor = input.value.replace(/[^\d]/g, ""); // Solo números
+    let valor = input.value.replace(/[^\d]/g, ""); 
     if (valor === "") { input.value = ""; return; }
     input.value = "L. " + Number(valor).toLocaleString('en-US');
 }
 
-// --- 6. LOGICA DE ENVIO Y PDF (SE MANTIENE TU ESTRUCTURA) ---
+// --- 3. CONVERSOR UTM ---
+const convertirA_UTM = (lat, lng) => {
+    if (!lat || !lng) return "No marcado";
+    const a = 6378137.0; const eccSquared = 0.00669438; const k0 = 0.9996;
+    const zoneNumber = 16; const lonOrigin = (zoneNumber - 1) * 6 - 180 + 3;
+    const latRad = lat * Math.PI / 180.0; const lonRad = lng * Math.PI / 180.0;
+    const lonOriginRad = lonOrigin * Math.PI / 180.0;
+    const N = a / Math.sqrt(1 - eccSquared * Math.sin(latRad) * Math.sin(latRad));
+    const T = Math.tan(latRad) * Math.tan(latRad);
+    const C = eccSquared * Math.cos(latRad) * Math.cos(latRad) / (1 - eccSquared);
+    const A = Math.cos(latRad) * (lonRad - lonOriginRad);
+    const M = a * ((1 - eccSquared / 4 - 3 * eccSquared * eccSquared / 64 - 5 * eccSquared * eccSquared / 256) * latRad - (3 * eccSquared / 8 + 3 * eccSquared * eccSquared / 32 + 45 * eccSquared * eccSquared * eccSquared / 1024) * Math.sin(2 * latRad) + (15 * eccSquared * eccSquared / 256 + 45 * eccSquared * eccSquared / 1024) * Math.sin(4 * latRad) - (35 * eccSquared * eccSquared * eccSquared / 3072) * Math.sin(6 * latRad));
+    const easting = (k0 * N * (A + (1 - T + C) * A * A * A / 6 + (5 - 18 * T + T * T + 72 * C - 58 * eccSquared) * A * A * A * A * A / 120) + 500000.0);
+    const northing = (k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccSquared) * A * A * A * A * A * A / 720)));
+    return `${Math.round(easting)}, ${Math.round(northing)}`;
+};
+
+// --- 4. ENVÍO Y PDF ---
 async function enviarArchivoAR2(archivo, nombre, tipo) {
     try {
         await fetch("https://api-poda.proyectos-jdop.workers.dev/upload", {
@@ -177,51 +192,95 @@ async function generarPDFPoda() {
     const numEnergis = document.getElementById('poda-energis').value.trim();
     if (!numEnergis) { alert("Ingrese el Número de Reporte."); return; }
 
-    // Limpiar formato de moneda para guardar solo números en la BD
-    const pagoMO_raw = document.getElementById('pago-mo').value.replace(/[^\d]/g, "");
-    const pagoTrans_raw = document.getElementById('pago-trans').value.replace(/[^\d]/g, "");
-
     const nombreArchivoFinal = `Reporte_ENERGIS_${numEnergis}.pdf`;
 
     const datosRespaldo = {
         sector: sectorActivo,
         circuito: document.getElementById('poda-circuito').value,
         zona: document.getElementById('poda-zona').value,
-        fecha: document.getElementById('poda-fecha').value,
-        personas: document.getElementById('poda-personas').value,
-        brecha: document.getElementById('m-brecha').value,
-        poda: document.getElementById('m-poda').value,
-        postes: document.getElementById('m-postes').value,
-        pago_mo: pagoMO_raw,
-        pago_trans: pagoTrans_raw,
-        gps_ini: gpsIni,
-        gps_fin: gpsFin,
-        resp_super: document.getElementById('resp-super').value,
-        resp_activ: document.getElementById('resp-activ').value,
+        fecha_trabajo: document.getElementById('poda-fecha').value,
+        cuadrilla_p: document.getElementById('poda-personas').value,
+        m_brecha: document.getElementById('m-brecha').value,
+        m_poda: document.getElementById('m-poda').value,
+        m_postes: document.getElementById('m-postes').value,
+        pago_mo: document.getElementById('pago-mo').value.replace(/[^\d]/g, ""),
+        pago_transp: document.getElementById('pago-trans').value.replace(/[^\d]/g, ""),
+        gps_inicio: gpsIni,
+        gps_final: gpsFin,
+        responsable_superv: document.getElementById('resp-super').value,
+        responsable_contra: document.getElementById('resp-activ').value,
         reporte_energis: numEnergis
     };
 
-    // Envío a D1
     try {
         await fetch("https://api-poda.proyectos-jdop.workers.dev/", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(datosRespaldo)
         });
-    } catch (e) { console.error("D1 Error"); }
+    } catch (e) { console.error("D1 Error", e); }
 
-    // Lógica de PDF... (aquí sigue tu código de jsPDF igual que antes)
-    // Asegúrate de usar las variables latIni, lngIni para el conversor UTM que ya tienes.
-    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    
-    // ... resto de tu código de generación de PDF ...
-    
+    const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
+
+    const getLogoBase64 = (url) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width; canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            };
+            img.src = url;
+        });
+    };
+
+    const logoImg = await getLogoBase64(logoUrl);
+
+    const dibujarEstructura = () => {
+        doc.setDrawColor(0); doc.setLineWidth(0.5); doc.rect(5, 5, 200, 287); 
+        doc.setLineWidth(0.3); doc.rect(10, 10, 190, 25); 
+        doc.line(60, 10, 60, 35); doc.line(150, 10, 150, 35); 
+        if (logoImg) doc.addImage(logoImg, 'PNG', 12, 12, 45, 20);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        doc.text("INFORME DE PODA COMUNITARIA", 105, 19, {align: "center"});
+        doc.text("SECTOR: " + sectorActivo, 105, 27, {align: "center"});
+        doc.setFontSize(8); doc.text("ENERGIS: " + numEnergis, 152, 15);
+    };
+
+    const leerFoto = (id) => {
+        const file = document.getElementById(id).files[0];
+        if (!file) return null;
+        return new Promise(resolve => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+    };
+
+    dibujarEstructura();
+    doc.setFontSize(9); doc.rect(10, 40, 190, 45);
+    doc.text("CIRCUITO: " + document.getElementById('poda-circuito').value, 15, 47);
+    doc.text("ZONA: " + document.getElementById('poda-zona').value, 100, 47);
+    doc.text("GPS INICIO (UTM): " + convertirA_UTM(latIni, lngIni), 15, 54);
+    doc.text("GPS FINAL (UTM): " + convertirA_UTM(latFin, lngFin), 100, 54);
+    doc.text("PAGO MO: L. " + document.getElementById('pago-mo').value, 15, 61);
+    doc.text("PAGO TRANS: L. " + document.getElementById('pago-trans').value, 100, 61);
+
+    const fGrupo = await leerFoto('f-grupo');
+    if (fGrupo) {
+        doc.text("FOTO GRUPO", 105, 93, {align:"center"});
+        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
+    }
+
     const pdfBlobResult = doc.output('blob');
     await enviarArchivoAR2(pdfBlobResult, nombreArchivoFinal, "application/pdf");
     doc.save(nombreArchivoFinal);
-    alert("✅ Proceso completado exitosamente.");
+    alert("✅ Reporte generado y subido.");
 }
 
 function previsualizar(input, idContenedor) {
@@ -232,8 +291,7 @@ function previsualizar(input, idContenedor) {
         reader.onload = (e) => {
             const img = document.createElement('img');
             img.src = e.target.result;
-            img.style.width = "100%"; img.style.height = "100%";
-            img.style.objectFit = "cover";
+            img.style.width = "100%"; img.style.height = "100%"; img.style.objectFit = "cover";
             contenedor.appendChild(img);
         }
         reader.readAsDataURL(input.files[0]);
