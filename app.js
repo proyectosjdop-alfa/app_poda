@@ -396,13 +396,13 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-mo').value}`, 60, yD);
+    doc.text(document.getElementById('pago-mo').value || "L. 0", 60, yD);
     yD += 6;
 
     doc.setFont("helvetica", "bold");
     doc.text("PAGO TRANSPORTE:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`L. ${document.getElementById('pago-trans').value}`, 60, yD);
+    doc.text(document.getElementById('pago-trans').value || "L. 0", 60, yD);
     yD += 6;
 
     doc.setFont("helvetica", "bold");
@@ -502,4 +502,21 @@ function previsualizar(input, idContenedor) {
         }
         reader.readAsDataURL(input.files[0]);
     }
+}
+// Función para formatear en tiempo real con "L. " y separador de miles
+function formatearMoneda(input) {
+    // 1. Quitamos todo lo que no sea un número
+    let valor = input.value.replace(/\D/g, "");
+    
+    // Si el campo queda vacío, lo dejamos limpio
+    if (!valor) {
+        input.value = "";
+        return;
+    }
+    
+    // 2. Convertimos a formato con separador de miles usando la configuración regional
+    let valorFormateado = Number(valor).toLocaleString('en-US');
+    
+    // 3. Asignamos el prefijo de Lempiras
+    input.value = "L. " + valorFormateado;
 }
