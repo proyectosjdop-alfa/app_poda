@@ -89,9 +89,9 @@
         <input type="number" id="poda-personas" placeholder="Personas Contratadas">
 
         <div class="grid-2">
-            <input type="number" id="pago-mo" placeholder="Mano de Obra (L)">
-            <input type="number" id="pago-trans" placeholder="Transporte (L)">
-        </div>
+    		<input type="text" id="pago-mo" placeholder="Mano de Obra" oninput="formatearMoneda(this)">
+    		<input type="text" id="pago-trans" placeholder="Transporte" oninput="formatearMoneda(this)">
+		</div>
 
         <label>Responsables:</label>
         <input type="text" id="resp-super" placeholder="Responsable Supervisión">
