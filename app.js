@@ -258,15 +258,53 @@ async function generarPDFPoda() {
         doc.text("Fecha", 152, 31);
     };
 
-    const leerFoto = (id) => {
-        const file = document.getElementById(id).files[0];
-        if (!file) return null;
-        return new Promise(resolve => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsDataURL(file);
-        });
-    };
+    // NUEVA FUNCIÓN: Lee, redimensiona y comprime la foto antes de meterla al PDF
+const leerFoto = (id) => {
+    const file = document.getElementById(id).files[0];
+    if (!file) return null;
+    
+    return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Definimos un tamaño máximo (1024px es ideal para reportes)
+                const MAX_WIDTH = 1024;
+                const MAX_HEIGHT = 1024;
+                let width = img.width;
+                let height = img.height;
+                
+                // Mantenemos la proporción original de la foto
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Dibujamos la imagen en el lienzo con las nuevas medidas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Exportamos como JPEG comprimido al 70% de calidad (0.7)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(dataUrl);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+};
 
     dibujarEstructuraInstitucional();
     doc.setLineWidth(0.2);
