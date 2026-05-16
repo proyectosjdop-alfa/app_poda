@@ -215,7 +215,7 @@ async function generarPDFPoda() {
     const doc = new jsPDF();
     const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
 
-    // NUEVA VERSIÓN: Descarga y comprime el logo institucional a tamaño óptimo
+    // VERSIÓN REPARADA: Comprime el logo y le genera un fondo blanco para evitar el cuadro negro
     const getLogoBase64 = (url) => {
         return new Promise((resolve) => {
             const img = new Image();
@@ -223,17 +223,23 @@ async function generarPDFPoda() {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 
-                // Redimensionamos el logo a un tamaño de impresión óptimo (300px de ancho)
+                // Redimensionamos a un tamaño óptimo para impresión (300px de ancho)
                 const MAX_WIDTH = 300;
                 const escala = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * escala;
                 
                 const ctx = canvas.getContext('2d');
+                
+                // --- TRUCO CLAVE: Pintamos un fondo blanco sólido ---
+                ctx.fillStyle = "#FFFFFF";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Ahora dibujamos el logo transparente encima del fondo blanco
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Exportamos como JPEG ligero
-                resolve(canvas.toDataURL('image/jpeg', 0.8));
+                // Exportamos como JPEG ligero (calidad 85%)
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
             };
             img.onerror = () => {
                 console.error("No se pudo cargar el logo, se generará el PDF sin él.");
