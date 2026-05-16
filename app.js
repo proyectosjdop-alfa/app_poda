@@ -133,9 +133,9 @@ async function cargarCapaCircuitos() {
             style: function(feature) {
                 // Le damos un estilo visual llamativo a las líneas del circuito (Color naranja/rojo eléctrico)
                 return {
-                    color: "#ff3333", 
-                    weight: 3,
-                    opacity: 0.85
+                    color: "#ffff4d",   // Amarillo claro y brillante (puedes usar también "#ffeb3b")
+                    weight: 3.5,        // Le subí un poquito el grosor (de 3 a 3.5) para que se vea mejor
+                    opacity: 0.9        // Un toque más opaco para que resalte bastante
                 };
             },
             onEachFeature: function(feature, layer) {
