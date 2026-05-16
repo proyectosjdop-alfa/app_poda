@@ -3,6 +3,7 @@ var gpsIni = "No marcado", gpsFin = "No marcado";
 var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
+var circuitosData = []; // Guardará la lista completa desde Google Sheets
 
 let fotoBlob = null; 
 
@@ -33,11 +34,52 @@ function validarLogin() {
         document.getElementById('form-poda-container').style.display = 'block';
         document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
         initMapPoda();
+        // Cargar los circuitos filtrados por el sector que acaba de ingresar
+        cargarCircuitosDesdeSheets();
     } else {
         document.getElementById('login-error').style.display = 'block';
     }
 }
 
+// Función para descargar los datos públicos de Google Sheets
+async function cargarCircuitosDesdeSheets() {
+    const sheetId = "15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+
+    try {
+        const respuesta = await fetch(url);
+        const textoCSV = await respuesta.text();
+        
+        const filas = textoCSV.split("\n").map(fila => 
+            fila.split(",").map(celda => celda.replace(/^"(.*)"$/, '$1').trim())
+        );
+
+        circuitosData = filas.slice(1); 
+        actualizarDesplegableCircuitos();
+    } catch (error) {
+        console.error("Error al conectar con Google Sheets:", error);
+        alert("No se pudo cargar la lista de circuitos automáticamente. Por favor comprueba tu conexión.");
+    }
+}
+
+// Función para filtrar y llenar el select según el sector activo
+function actualizarDesplegableCircuitos() {
+    const selectCircuito = document.getElementById('poda-circuito');
+    
+    selectCircuito.innerHTML = '<option value="">Seleccione un circuito...</option>';
+
+    circuitosData.forEach(fila => {
+        if (fila[0] && fila[0].toUpperCase() === sectorActivo) {
+            const circuitoNombre = fila[1];
+            if (circuitoNombre) {
+                const option = document.createElement('option');
+                option.value = circuitoNombre;
+                option.textContent = circuitoNombre;
+                selectCircuito.appendChild(option);
+            }
+        }
+    });
+}
 function initMapPoda() {
     if (mapP) mapP.remove();
     mapP = L.map('map-poda').setView([14.65, -86.21], 15);
