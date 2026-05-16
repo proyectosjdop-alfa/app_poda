@@ -215,17 +215,29 @@ async function generarPDFPoda() {
     const doc = new jsPDF();
     const logoUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/refs/heads/main/imagenes/UTCD%20Vertical.png";
 
+    // NUEVA VERSIÓN: Descarga y comprime el logo institucional a tamaño óptimo
     const getLogoBase64 = (url) => {
         return new Promise((resolve) => {
             const img = new Image();
             img.crossOrigin = 'Anonymous';
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
+                
+                // Redimensionamos el logo a un tamaño de impresión óptimo (300px de ancho)
+                const MAX_WIDTH = 300;
+                const escala = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * escala;
+                
                 const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL('image/png'));
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Exportamos como JPEG ligero
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = () => {
+                console.error("No se pudo cargar el logo, se generará el PDF sin él.");
+                resolve(null);
             };
             img.src = url;
         });
