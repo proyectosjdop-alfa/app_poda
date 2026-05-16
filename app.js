@@ -44,7 +44,9 @@ function validarLogin() {
 // Función para descargar los datos públicos de Google Sheets
 async function cargarCircuitosDesdeSheets() {
     const sheetId = "15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A";
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+    const gid = "434622515"; // ID exacto de la pestaña de circuitos
+    // Añadimos el parámetro &gid= para forzar la lectura de la pestaña correcta
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
 
     try {
         const respuesta = await fetch(url);
