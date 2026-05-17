@@ -37,10 +37,7 @@ function validarLogin() {
         initMapPoda();
         // Cargar los circuitos filtrados por el sector que acaba de ingresar
         cargarCircuitosDesdeSheets(); // Carga el menú desplegable
-        
-        // LLAMADA NUEVA: Descarga y dibuja las líneas de los circuitos en el mapa
-        cargarCapaCircuitos();
-        
+                    
     } else {
         document.getElementById('login-error').style.display = 'block';
     }
@@ -111,6 +108,12 @@ async function cargarCapaCircuitos() {
         mapP.removeLayer(capaGeoJSON);
     }
 
+    // Obtenemos el circuito que el usuario seleccionó en el menú desplegable
+    const circuitoSeleccionado = document.getElementById('poda-circuito').value;
+
+    // Si el usuario vuelve a poner "Seleccione un circuito...", dejamos el mapa limpio y salimos
+    if (!circuitoSeleccionado) return;
+
     // URL en formato RAW para poder consultar los datos desde el navegador
     const geojsonUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/main/Circuitos%20Honduras(2).geojson";
    
@@ -121,14 +124,11 @@ async function cargarCapaCircuitos() {
         // Creamos la capa de Leaflet aplicando un filtro por SECTOR
         capaGeoJSON = L.geoJSON(datosGeoJSON, {
             filter: function(feature) {
-                // EXPLICACIÓN DEL FILTRO:
-                // Asumimos que dentro de las propiedades ('properties') de cada tramo en tu archivo
-                // existe un campo que identifica al sector (por ejemplo: 'SECTOR', 'sector', 'subestacion', etc.)
-                // NOTA: Ajusta el nombre del campo ('SECTOR') según cómo esté escrito en tu archivo.
-                if (feature.properties && feature.properties.SECTOR) {
-                    return feature.properties.SECTOR.toUpperCase() === sectorActivo.toUpperCase();
+                // --- CAMBIO CLAVE: Ahora filtramos por el nombre exacto del CIRCUITO ---
+                if (feature.properties && feature.properties.CIRCUITO) {
+                    return feature.properties.CIRCUITO.toUpperCase() === circuitoSeleccionado.toUpperCase();
                 }
-                return false; // Si no tiene la propiedad o no coincide, se ignora
+                return false; 
             },
             style: function(feature) {
                 // Le damos un estilo visual llamativo a las líneas del circuito (Color naranja/rojo eléctrico)
@@ -147,7 +147,14 @@ async function cargarCapaCircuitos() {
             }
         }).addTo(mapP); // La agregamos directamente al mapa activo
 
-        console.log("Capa GeoJSON cargada y filtrada con éxito para el sector: " + sectorActivo);
+        // EXTRA SEGURO: Hace que el mapa se mueva automáticamente y haga "zoom" 
+        // directo hacia donde está la línea del circuito seleccionado
+        const bounds = capaGeoJSON.getBounds();
+        if (bounds.isValid()) {
+            mapP.fitBounds(bounds);
+        }
+
+        console.log("Mostrando en mapa el circuito: " + circuitoSeleccionado);
 
     } catch (error) {
         console.error("Error al cargar el archivo GeoJSON desde GitHub:", error);
