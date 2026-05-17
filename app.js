@@ -5,6 +5,28 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 var circuitosData = []; // Guardará la lista completa desde Google Sheets
+// Definición de iconos personalizados en Leaflet
+var greenIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+var redIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+// Variables adicionales para los marcadores fijos en el mapa
+var markerInicial = null;
+var markerFinal = null;
 
 let fotoBlob = null; 
 
@@ -166,23 +188,64 @@ function actualizarMarcador(lat, lng) {
     markerP.setLatLng([lat, lng]);
 }
 
-function ingresarManual() {
-    const lat = parseFloat(document.getElementById('manual-lat').value);
-    const lng = parseFloat(document.getElementById('manual-lng').value);
+function ingresarManual(tipo) {
+    // Dependiendo del tipo, leemos las cajas de texto correspondientes
+    let latId = tipo === 'ini' ? 'manual-lat' : 'manual-lat-fin'; // Asegúrate de que coincidan con los IDs de tu HTML
+    let lngId = tipo === 'ini' ? 'manual-lng' : 'manual-lng-fin'; // Asegúrate de que coincidan con los IDs de tu HTML
+
+    const lat = parseFloat(document.getElementById(latId).value);
+    const lng = parseFloat(document.getElementById(lngId).value);
+    
     if (!isNaN(lat) && !isNaN(lng)) {
+        // 1. Movemos el marcador azul principal a esa posición
         actualizarMarcador(lat, lng);
+        
+        // 2. Dibujamos el pin de color (Verde o Rojo) de forma automática
+        marcarGPS(tipo); 
     } else {
         alert("Por favor, ingrese valores numéricos válidos para Latitud y Longitud.");
     }
 }
 
 function marcarGPS(tipo) {
+    if (!markerP) {
+        alert("Primero mueve el marcador principal en el mapa.");
+        return;
+    }
+
     let p = markerP.getLatLng();
     let lat = Number(p.lat.toFixed(6));
     let lng = Number(p.lng.toFixed(6));
     let c = lat + ", " + lng;
-    if (tipo === 'ini') { gpsIni = c; latIni = lat; lngIni = lng; } 
-    else { gpsFin = c; latFin = lat; lngFin = lng; }
+    
+    if (tipo === 'ini') { 
+        gpsIni = c; 
+        latIni = lat; 
+        lngIni = lng; 
+        
+        // Si ya existía un pin verde viejo, lo quitamos
+        if (markerInicial) mapP.removeLayer(markerInicial);
+        
+        // Creamos el marcador fijo VERDE
+        markerInicial = L.marker([latIni, lngIni], { icon: greenIcon })
+            .addTo(mapP)
+            .bindPopup("<b>Punto Inicial Guardado</b>");
+            
+    } else { 
+        gpsFin = c; 
+        latFin = lat; 
+        lngFin = lng; 
+        
+        // Si ya existía un pin rojo viejo, lo quitamos
+        if (markerFinal) mapP.removeLayer(markerFinal);
+        
+        // Creamos el marcador fijo ROJO
+        markerFinal = L.marker([latFin, lngFin], { icon: redIcon })
+            .addTo(mapP)
+            .bindPopup("<b>Punto Final Guardado</b>");
+    }
+    
+    // Mantiene tu etiqueta de texto original abajo del mapa actualizada
     document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
 }
 
