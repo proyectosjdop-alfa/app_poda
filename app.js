@@ -112,8 +112,8 @@ async function cargarCapaCircuitos() {
     }
 
     // URL en formato RAW para poder consultar los datos desde el navegador
-    const geojsonUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/main/Circuitos%20Honduras.geojson";
-
+    const geojsonUrl = "https://raw.githubusercontent.com/proyectosjdop-alfa/app_poda/main/Circuitos%20Honduras(2).geojson";
+   
     try {
         const respuesta = await fetch(geojsonUrl);
         const datosGeoJSON = await respuesta.json();
