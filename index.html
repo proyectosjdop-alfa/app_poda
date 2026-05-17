@@ -177,20 +177,29 @@
         <label>GPS:</label>
         <div id="map-poda" style="height: 180px; border-radius: 8px;"></div>
 
-        <div style="background: #1b2a36; padding: 10px; border-radius: 8px; margin-top: 10px;">
-		 <span style="font-size: 0.7rem; color: #f1c40f;">INGRESO MANUAL DE COORDENADAS:</span>
-            <div class="grid-3">
-                <input type="number" id="manual-lat" step="any" placeholder="Latitud">
-                <input type="number" id="manual-lng" step="any" placeholder="Longitud">
-                <button type="button" class="btn-secundario" style="margin-top:5px;" onclick="ingresarManual()">UBICAR</button>
+        <div style="background: #1b2a36; padding: 12px; border-radius: 8px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+            
+            <div class="grid-3" style="align-items: center;">
+                <input type="number" id="manual-lat" step="any" placeholder="Latitud Inicial">
+                <input type="number" id="manual-lng" step="any" placeholder="Longitud Inicial">
+                <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn-ubicar" style="flex: 1;" onclick="ingresarManual('ini')">UBICAR</button>
+                    <button type="button" class="btn-gps" style="flex: 1; background-color: #2ecc71;" onclick="marcarGPS('ini')">GPS INICIAL</button>
+                </div>
             </div>
+
+            <div class="grid-3" style="align-items: center;">
+                <input type="number" id="manual-lat-fin" step="any" placeholder="Latitud Final">
+                <input type="number" id="manual-lng-fin" step="any" placeholder="Longitud Final">
+                <div style="display: flex; gap: 5px;">
+                    <button type="button" class="btn-ubicar" style="flex: 1;" onclick="ingresarManual('fin')">UBICAR</button>
+                    <button type="button" class="btn-gps-fin" style="flex: 1; background-color: #e74c3c;" onclick="marcarGPS('fin')">GPS FINAL</button>
+                </div>
+            </div>
+
         </div>
 
-        <div class="grid-2">
-            <button type="button" class="btn-secundario" onclick="marcarGPS('ini')">GPS INICIO</button>
-            <button type="button" class="btn-secundario" onclick="marcarGPS('fin')">GPS FINAL</button>
-        </div>
-        <p class="coords-text" id="coords-display">Inicio: -- | Fin: --</p>
+        <p class="coords-text" id="coords-display" style="margin-top: 8px; font-weight: bold;">Inicio: -- | Fin: --</p>
 
         <button type="button" class="btn-enviar" onclick="generarPDFPoda()">GENERAR INFORME PODA</button>
     </form>
