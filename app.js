@@ -451,10 +451,11 @@ const leerFoto = (id) => {
 
     dibujarEstructuraInstitucional();
     doc.setLineWidth(0.2);
-    doc.rect(10, 40, 190, 51); 
+    doc.rect(10, 40, 190, 45); 
     doc.setFontSize(9);
     let yD = 47;
 
+    // FILA 1: # REP. ENERGIS | CIRCUITO
     doc.setFont("helvetica", "bold");
     doc.text("# REP. ENERGIS:", 15, yD);
     doc.setFont("helvetica", "normal");
@@ -465,12 +466,7 @@ const leerFoto = (id) => {
     doc.text(document.getElementById('poda-circuito').value, 130, yD);
     yD += 6;
 
-    doc.setFont("helvetica", "bold");
-    doc.text("ZONA DE TRABAJO:", 15, yD);
-    doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-zona').value, 55, yD);
-    yD += 6;
-
+    // FILA 2: FECHA | HORARIO
     doc.setFont("helvetica", "bold");
     doc.text("FECHA:", 15, yD);
     doc.setFont("helvetica", "normal");
@@ -480,14 +476,15 @@ const leerFoto = (id) => {
         const [anio, mes, dia] = fechaInput.split("-");
         fechaFormateada = `${dia}-${mes}-${anio}`;
     }
-    doc.text(fechaFormateada, 41, yD);
+    doc.text(fechaFormateada, 35, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("HORARIO:", 100, yD);
+    doc.text("HORARIO:", 110, yD);
     doc.setFont("helvetica", "normal");
-    let horario = `H.INICIO ${document.getElementById('h-ini').value}  / H.FINAL ${document.getElementById('h-fin').value}`;
-    doc.text(horario.substring(0, 55), 133, yD); 
+    let horario = `H.INICIO ${document.getElementById('h-ini').value} / H.FINAL ${document.getElementById('h-fin').value}`;
+    doc.text(horario.substring(0, 50), 130, yD); 
     yD += 6;
 
+    // FILA 3: P. GPS INICIAL | P. GPS FINAL
     doc.setFont("helvetica", "bold");
     doc.text("P. GPS INICIAL:", 15, yD);
     doc.setFont("helvetica", "normal");
@@ -506,56 +503,64 @@ const leerFoto = (id) => {
         const northing = (k0 * (M + N * Math.tan(latRad) * (A * A / 2 + (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 + (61 - 58 * T + T * T + 600 * C - 330 * eccSquared) * A * A * A * A * A * A / 720)));
         return `${Math.round(easting)}, ${Math.round(northing)}`;
     };
-    doc.text(`${convertirA_UTM(latIni, lngIni)}`, 41, yD);
+    doc.text(`${convertirA_UTM(latIni, lngIni)}`, 45, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("P. GPS FINAL:", 100, yD);
+    doc.text("P. GPS FINAL:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 133, yD);
+    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 138, yD);
     yD += 6;
 
+    // FILA 4: ZONA DE TRABAJO | PERSONAS CONTRATADAS
     doc.setFont("helvetica", "bold");
-    doc.text("PERSONAS CONTRATADAS:", 15, yD);
+    doc.text("ZONA DE TRABAJO:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-personas').value, 60, yD);
+    doc.text(document.getElementById('poda-zona').value, 53, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("RESPONSABLES:", 100, yD); 
+    doc.text("PERSONAS CONTRATADAS:", 110, yD);
     doc.setFont("helvetica", "normal");
-    let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
-    doc.text(resps.substring(0, 55), 133, yD); 
+    doc.text(document.getElementById('poda-personas').value, 168, yD);
     yD += 6;
 
+    // FILA 5: PAGO MANO DE OBRA | PAGO TRANSPORTE
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
     doc.text(document.getElementById('pago-mo').value || "L. 0", 60, yD);
-    yD += 6;
-
     doc.setFont("helvetica", "bold");
-    doc.text("PAGO TRANSPORTE:", 15, yD);
+    doc.text("PAGO TRANSPORTE:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('pago-trans').value || "L. 0", 60, yD);
+    doc.text(document.getElementById('pago-trans').value || "L. 0", 148, yD);
     yD += 6;
 
+    // FILA 6: TRABAJO EJECUTADO (fila completa)
     doc.setFont("helvetica", "bold");
     doc.text("TRABAJO EJECUTADO:", 15, yD);
     doc.setFont("helvetica", "normal");
     let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
     doc.text(trabajo, 60, yD);
+    yD += 6;
+
+    // FILA 7: RESPONSABLES (fila completa)
+    doc.setFont("helvetica", "bold");
+    doc.text("RESPONSABLES:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
+    doc.text(resps.substring(0, 70), 48, yD);
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
 
     if (fGrupo) {
-        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 99);
-        doc.addImage(fGrupo, 'JPEG', 25, 101, 160, 95);
-        doc.rect(25, 101, 160, 95);
+        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 93);
+        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
+        doc.rect(25, 95, 160, 95);
     }
     if (fVehiculo) {
         doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 206, { align: "center" });
+        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
         const vFotoW = 80; const vFotoH = 85; const centerX = (210 - vFotoW) / 2;
-        doc.addImage(fVehiculo, 'JPEG', centerX, 208, vFotoW, vFotoH);
-        doc.rect(centerX, 208, vFotoW, vFotoH);
+        doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
+        doc.rect(centerX, 202, vFotoW, vFotoH);
     }
 
     // --- MANEJO DE IDENTIDADES Y OTRAS PÁGINAS (TUS BUCLES EXISTENTES) ---
