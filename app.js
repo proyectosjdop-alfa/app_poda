@@ -461,9 +461,9 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "normal");
     doc.text(numEnergis, 45, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("CIRCUITO:", 110, yD);
+    doc.text("CIRCUITO:", 125, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-circuito').value, 135, yD);
+    doc.text(document.getElementById('poda-circuito').value, 150, yD);
     yD += 6;
 
     // FILA 2: FECHA | HORARIO
@@ -478,10 +478,10 @@ const leerFoto = (id) => {
     }
     doc.text(fechaFormateada, 45, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("HORARIO:", 110, yD);
+    doc.text("HORARIO:", 125, yD);
     doc.setFont("helvetica", "normal");
     let horario = `H.INICIO ${document.getElementById('h-ini').value} / H.FINAL ${document.getElementById('h-fin').value}`;
-    doc.text(horario.substring(0, 50), 135, yD); 
+    doc.text(horario.substring(0, 50), 150, yD); 
     yD += 6;
 
     // FILA 3: P. GPS INICIAL | P. GPS FINAL
@@ -505,9 +505,9 @@ const leerFoto = (id) => {
     };
     doc.text(`${convertirA_UTM(latIni, lngIni)}`, 45, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("P. GPS FINAL:", 110, yD);
+    doc.text("P. GPS FINAL:", 125, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 135, yD);
+    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 150, yD);
     yD += 6;
 
     // FILA 4: ZONA DE TRABAJO | PERSONAS CONTRATADAS
@@ -516,9 +516,9 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "normal");
     doc.text(document.getElementById('poda-zona').value, 55, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("PERSONAS CONTRATADAS:", 110, yD);
+    doc.text("PERS. CONTRATADAS:", 125, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-personas').value, 160, yD);
+    doc.text(document.getElementById('poda-personas').value, 165, yD);
     yD += 6;
 
     // FILA 5: PAGO MANO DE OBRA | PAGO TRANSPORTE
@@ -527,9 +527,9 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "normal");
     doc.text(document.getElementById('pago-mo').value || "L. 0", 55, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("PAGO TRANSPORTE:", 110, yD);
+    doc.text("PAGO TRANSPORTE:", 125, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('pago-trans').value || "L. 0", 160, yD);
+    doc.text(document.getElementById('pago-trans').value || "L. 0", 165, yD);
     yD += 6;
 
     // FILA 6: TRABAJO EJECUTADO (fila completa)
