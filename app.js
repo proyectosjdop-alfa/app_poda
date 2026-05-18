@@ -459,11 +459,11 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "bold");
     doc.text("# REP. ENERGIS:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(numEnergis, 50, yD);
+    doc.text(numEnergis, 45, yD);
     doc.setFont("helvetica", "bold");
     doc.text("CIRCUITO:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-circuito').value, 130, yD);
+    doc.text(document.getElementById('poda-circuito').value, 135, yD);
     yD += 6;
 
     // FILA 2: FECHA | HORARIO
@@ -476,12 +476,12 @@ const leerFoto = (id) => {
         const [anio, mes, dia] = fechaInput.split("-");
         fechaFormateada = `${dia}-${mes}-${anio}`;
     }
-    doc.text(fechaFormateada, 35, yD);
+    doc.text(fechaFormateada, 45, yD);
     doc.setFont("helvetica", "bold");
     doc.text("HORARIO:", 110, yD);
     doc.setFont("helvetica", "normal");
     let horario = `H.INICIO ${document.getElementById('h-ini').value} / H.FINAL ${document.getElementById('h-fin').value}`;
-    doc.text(horario.substring(0, 50), 130, yD); 
+    doc.text(horario.substring(0, 50), 135, yD); 
     yD += 6;
 
     // FILA 3: P. GPS INICIAL | P. GPS FINAL
@@ -507,29 +507,29 @@ const leerFoto = (id) => {
     doc.setFont("helvetica", "bold");
     doc.text("P. GPS FINAL:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 138, yD);
+    doc.text(`${convertirA_UTM(latFin, lngFin)}`, 135, yD);
     yD += 6;
 
     // FILA 4: ZONA DE TRABAJO | PERSONAS CONTRATADAS
     doc.setFont("helvetica", "bold");
     doc.text("ZONA DE TRABAJO:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-zona').value, 53, yD);
+    doc.text(document.getElementById('poda-zona').value, 55, yD);
     doc.setFont("helvetica", "bold");
     doc.text("PERSONAS CONTRATADAS:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-personas').value, 168, yD);
+    doc.text(document.getElementById('poda-personas').value, 160, yD);
     yD += 6;
 
     // FILA 5: PAGO MANO DE OBRA | PAGO TRANSPORTE
     doc.setFont("helvetica", "bold");
     doc.text("PAGO MANO DE OBRA:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('pago-mo').value || "L. 0", 60, yD);
+    doc.text(document.getElementById('pago-mo').value || "L. 0", 55, yD);
     doc.setFont("helvetica", "bold");
     doc.text("PAGO TRANSPORTE:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('pago-trans').value || "L. 0", 148, yD);
+    doc.text(document.getElementById('pago-trans').value || "L. 0", 160, yD);
     yD += 6;
 
     // FILA 6: TRABAJO EJECUTADO (fila completa)
@@ -537,7 +537,7 @@ const leerFoto = (id) => {
     doc.text("TRABAJO EJECUTADO:", 15, yD);
     doc.setFont("helvetica", "normal");
     let trabajo = `Brecha: ${document.getElementById('m-brecha').value}m, Poda: ${document.getElementById('m-poda').value}m, Postes: ${document.getElementById('m-postes').value}`;
-    doc.text(trabajo, 60, yD);
+    doc.text(trabajo, 55, yD);
     yD += 6;
 
     // FILA 7: RESPONSABLES (fila completa)
@@ -545,7 +545,7 @@ const leerFoto = (id) => {
     doc.text("RESPONSABLES:", 15, yD);
     doc.setFont("helvetica", "normal");
     let resps = `${document.getElementById('resp-super').value} / ${document.getElementById('resp-activ').value}`;
-    doc.text(resps.substring(0, 70), 48, yD);
+    doc.text(resps.substring(0, 70), 55, yD);
 
     const fGrupo = await leerFoto('f-grupo');
     const fVehiculo = await leerFoto('f-vehiculo');
