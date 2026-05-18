@@ -451,18 +451,24 @@ const leerFoto = (id) => {
 
     dibujarEstructuraInstitucional();
     doc.setLineWidth(0.2);
-    doc.rect(10, 40, 190, 45); 
+    doc.rect(10, 40, 190, 51); 
     doc.setFontSize(9);
     let yD = 47;
 
     doc.setFont("helvetica", "bold");
-    doc.text("CIRCUITO:", 15, yD);
+    doc.text("# REP. ENERGIS:", 15, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-circuito').value, 41, yD);
+    doc.text(numEnergis, 50, yD);
     doc.setFont("helvetica", "bold");
-    doc.text("ZONA DE TRABAJO:", 100, yD);
+    doc.text("CIRCUITO:", 110, yD);
     doc.setFont("helvetica", "normal");
-    doc.text(document.getElementById('poda-zona').value, 133, yD);
+    doc.text(document.getElementById('poda-circuito').value, 130, yD);
+    yD += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("ZONA DE TRABAJO:", 15, yD);
+    doc.setFont("helvetica", "normal");
+    doc.text(document.getElementById('poda-zona').value, 55, yD);
     yD += 6;
 
     doc.setFont("helvetica", "bold");
@@ -540,16 +546,16 @@ const leerFoto = (id) => {
     const fVehiculo = await leerFoto('f-vehiculo');
 
     if (fGrupo) {
-        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 93);
-        doc.addImage(fGrupo, 'JPEG', 25, 95, 160, 95);
-        doc.rect(25, 95, 160, 95);
+        doc.setFont("helvetica", "bold"); doc.text("FOTO GRUPO", 90, 99);
+        doc.addImage(fGrupo, 'JPEG', 25, 101, 160, 95);
+        doc.rect(25, 101, 160, 95);
     }
     if (fVehiculo) {
         doc.setFont("helvetica", "bold"); 
-        doc.text("FOTO VEHÍCULO", 105, 200, { align: "center" });
+        doc.text("FOTO VEHÍCULO", 105, 206, { align: "center" });
         const vFotoW = 80; const vFotoH = 85; const centerX = (210 - vFotoW) / 2;
-        doc.addImage(fVehiculo, 'JPEG', centerX, 202, vFotoW, vFotoH);
-        doc.rect(centerX, 202, vFotoW, vFotoH);
+        doc.addImage(fVehiculo, 'JPEG', centerX, 208, vFotoW, vFotoH);
+        doc.rect(centerX, 208, vFotoW, vFotoH);
     }
 
     // --- MANEJO DE IDENTIDADES Y OTRAS PÁGINAS (TUS BUCLES EXISTENTES) ---
