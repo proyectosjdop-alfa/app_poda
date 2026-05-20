@@ -265,6 +265,7 @@ function marcarGPS(tipo) {
     let c = lat + ", " + lng;
     
     if (tipo === 'ini') { 
+        
         gpsIni = c; 
         latIni = lat; 
         lngIni = lng; 
@@ -273,11 +274,15 @@ function marcarGPS(tipo) {
         if (markerInicial) mapP.removeLayer(markerInicial);
         
         // Creamos el marcador fijo VERDE
-        markerInicial = L.marker([latIni, lngIni], { icon: greenIcon, zIndexOffset: 1000 })
-            .addTo(mapP)
-            .bindPopup("<b>Punto Inicial Guardado</b>");
+        markerInicial = L.marker([latIni, lngIni], {
+            icon: greenIcon,
+            zIndexOffset: 1000
+        })
+        .addTo(mapP)
+        .bindPopup("<b>Punto Inicial Guardado</b>");
             
     } else { 
+        
         gpsFin = c; 
         latFin = lat; 
         lngFin = lng; 
@@ -286,42 +291,26 @@ function marcarGPS(tipo) {
         if (markerFinal) mapP.removeLayer(markerFinal);
         
         // Creamos el marcador fijo ROJO
-// Se desplaza ligeramente para evitar que quede exactamente encima del verde
-const latOffset = latFin + 0.000015;
-const lngOffset = lngFin + 0.000015;
-
-markerFinal = L.marker([latOffset, lngOffset], {
-    icon: redIcon,
-    draggable: true,
-    interactive: true,
-    zIndexOffset: 10000
-})
-.addTo(mapP)
-.bindPopup("<b>Punto Final Guardado</b>");
-
-// Al mover el pin rojo actualiza las coordenadas finales reales
-markerFinal.on('dragstart', function () {
-    // Desactiva temporalmente eventos del marcador verde
-    if (markerInicial) {
-        markerInicial.dragging && markerInicial.dragging.disable();
-        markerInicial.off('click');
-    }
-});
-
-markerFinal.on('dragend', function (e) {
-    const pos = e.target.getLatLng();
-
-    latFin = Number(pos.lat.toFixed(6));
-    lngFin = Number(pos.lng.toFixed(6));
-    gpsFin = latFin + ", " + lngFin;
-
-    document.getElementById('coords-display').innerText =
-        `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
-});
+        markerFinal = L.marker([latFin, lngFin], {
+            icon: redIcon,
+            zIndexOffset: 2000
+        })
+        .addTo(mapP)
+        .bindPopup("<b>Punto Final Guardado</b>");
     }
     
-    // Mantiene tu etiqueta de texto original abajo del mapa actualizada
-    document.getElementById('coords-display').innerText = `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
+    // Actualiza texto inferior
+    document.getElementById('coords-display').innerText =
+        `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
+
+    // =====================================================
+    // VUELVE A MOVER LA CHINCHETA AZUL PARA SEGUIR MARCANDO
+    // =====================================================
+
+    const nuevaLat = lat + 0.000020;
+    const nuevaLng = lng + 0.000020;
+
+    markerP.setLatLng([nuevaLat, nuevaLng]);
 }
 
 // --- FUNCIÓN PARA SUBIR ARCHIVOS A R2 ---
