@@ -286,9 +286,38 @@ function marcarGPS(tipo) {
         if (markerFinal) mapP.removeLayer(markerFinal);
         
         // Creamos el marcador fijo ROJO
-        markerFinal = L.marker([latFin, lngFin], { icon: redIcon, draggable: true, zIndexOffset: 2000 })
-            .addTo(mapP)
-            .bindPopup("<b>Punto Final Guardado</b>");
+// Se desplaza ligeramente para evitar que quede exactamente encima del verde
+const latOffset = latFin + 0.000015;
+const lngOffset = lngFin + 0.000015;
+
+markerFinal = L.marker([latOffset, lngOffset], {
+    icon: redIcon,
+    draggable: true,
+    interactive: true,
+    zIndexOffset: 10000
+})
+.addTo(mapP)
+.bindPopup("<b>Punto Final Guardado</b>");
+
+// Al mover el pin rojo actualiza las coordenadas finales reales
+markerFinal.on('dragstart', function () {
+    // Desactiva temporalmente eventos del marcador verde
+    if (markerInicial) {
+        markerInicial.dragging && markerInicial.dragging.disable();
+        markerInicial.off('click');
+    }
+});
+
+markerFinal.on('dragend', function (e) {
+    const pos = e.target.getLatLng();
+
+    latFin = Number(pos.lat.toFixed(6));
+    lngFin = Number(pos.lng.toFixed(6));
+    gpsFin = latFin + ", " + lngFin;
+
+    document.getElementById('coords-display').innerText =
+        `Inicio: ${gpsIni} | Fin: ${gpsFin}`;
+});
     }
     
     // Mantiene tu etiqueta de texto original abajo del mapa actualizada
