@@ -95,8 +95,8 @@ async function cargarCircuitosDesdeSheets() {
 // CONTROL DE RESPONSABLES DE SUPERVISIÓN DINÁMICOS POR SECTOR
 // =========================================================================
 
-// URL de la pestaña de supervisores (gid=464847370) publicada como CSV
-const URL_SUPERVISORES_SHEET = "https://docs.google.com/spreadsheets/d/15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A/pub?gid=464847370&single=true&output=csv";
+// NUEVA URL: Cambiada al formato /gviz/tq que no genera bloqueos de redirección CORS
+const URL_SUPERVISORES_SHEET = "https://docs.google.com/spreadsheets/d/15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A/gviz/tq?tqx=out:csv&gid=464847370";
 
 // Arreglo global para almacenar todos los supervisores descargados
 var listaSupervisoresGlobal = [];
@@ -108,36 +108,36 @@ async function descargarSupervisoresDesdeSheet() {
         if (!respuesta.ok) throw new Error("Error de conexión con la base de datos.");
         
         const textoCSV = await respuesta.text();
-        const lineas = textoCSV.split(/\r?\n/);
+        
+        // Separamos por líneas limpiamente de la misma forma que los circuitos
+        const lineas = textoCSV.split("\n").map(fila => 
+            fila.split(",").map(celda => celda.replace(/^"(.*)"$/, '$1').trim())
+        );
         
         listaSupervisoresGlobal = []; // Limpiar por seguridad
         
-        // Empezamos en i = 1 para saltarnos los encabezados (Sector, Responsable)
+        // Empezamos en i = 1 para omitir los encabezados (Sector, Responsable)
         for (let i = 1; i < lineas.length; i++) {
-            const fila = lineas[i].trim();
-            if (fila) {
-                // Separar Columna A (Sector) y Columna B (Responsable)
-                const columnas = fila.split(",");
-                if (columnas.length >= 2) {
-                    const sector = columnas[0].replace(/"/g, "").trim().toUpperCase();
-                    const nombre = columnas[1].replace(/"/g, "").trim().toUpperCase();
-                    
-                    if (sector && nombre) {
-                        listaSupervisoresGlobal.push({ sector: sector, nombre: nombre });
-                    }
+            const columnas = lineas[i];
+            
+            // Validamos que la fila tenga al menos las dos columnas necesarias
+            if (columnas && columnas.length >= 2) {
+                const sector = columnas[0].toUpperCase();
+                const nombre = columnas[1].toUpperCase();
+                
+                if (sector && nombre) {
+                    listaSupervisoresGlobal.push({ sector: sector, nombre: nombre });
                 }
             }
         }
         console.log("Supervisores precargados con éxito:", listaSupervisoresGlobal.length);
         
-        // ========================================================
-        // 🔥 ESTA LÍNEA ES CRÍTICA: Filtra los datos apenas se descargan
-        // ========================================================
+        // Ejecutamos el filtro inmediatamente después de la descarga exitosa
         filtrarSupervisoresPorSector(); 
 
     } catch (error) {
         console.error("No se pudo precargar la lista de supervisores:", error);
-        // Si hay error de red, activa el plan B manual de inmediato
+        // Plan B automático si la red falla por completo
         convertirSelectEnInputManual();
     }
 }
