@@ -151,7 +151,6 @@ function actualizarDesplegableSupervisores() {
     });
 }
 
-
 function initMapPoda() {
     if (mapP) mapP.remove();
     mapP = L.map('map-poda').setView([14.65, -86.21], 15);
@@ -307,8 +306,8 @@ function marcarGPS(tipo) {
     // VUELVE A MOVER LA CHINCHETA AZUL PARA SEGUIR MARCANDO
     // =====================================================
 
-    const nuevaLat = lat + 0.000020;
-    const nuevaLng = lng + 0.000020;
+    const nuevaLat = lat + 0.000080;
+    const nuevaLng = lng + 0.000080;
 
     markerP.setLatLng([nuevaLat, nuevaLng]);
 }
