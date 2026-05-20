@@ -5,6 +5,7 @@ var latIni = null, lngIni = null;
 var latFin = null, lngFin = null;
 var sectorActivo = "";
 var circuitosData = []; // Guardará la lista completa desde Google Sheets
+var supervisoresData = []; // Guardará la lista de supervisores desde Google Sheets
 // Definición de iconos personalizados en Leaflet
 var greenIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -82,6 +83,7 @@ async function cargarCircuitosDesdeSheets() {
 
         circuitosData = filas.slice(1); 
         actualizarDesplegableCircuitos();
+        cargarSupervisoresDesdeSheets();
     } catch (error) {
         console.error("Error al conectar con Google Sheets:", error);
         alert("No se pudo cargar la lista de circuitos automáticamente. Por favor comprueba tu conexión.");
@@ -106,6 +108,50 @@ function actualizarDesplegableCircuitos() {
         }
     });
 }
+
+// Función para cargar supervisores desde Google Sheets
+async function cargarSupervisoresDesdeSheets() {
+    const sheetId = "15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A";
+    const gid = "464847370";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+
+    try {
+        const respuesta = await fetch(url);
+        const textoCSV = await respuesta.text();
+
+        const filas = textoCSV.split("\n").map(fila =>
+            fila.split(",").map(celda => celda.replace(/^"(.*)"$/, '$1').trim())
+        );
+
+        supervisoresData = filas.slice(1);
+        actualizarDesplegableSupervisores();
+    } catch (error) {
+        console.error("Error al cargar supervisores:", error);
+    }
+}
+
+// Filtra los supervisores según el sector ingresado
+function actualizarDesplegableSupervisores() {
+    const selectSupervisor = document.getElementById('resp-super');
+
+    if (!selectSupervisor) return;
+
+    selectSupervisor.innerHTML = '<option value="">Seleccione un supervisor...</option>';
+
+    supervisoresData.forEach(fila => {
+        const sector = fila[0] ? fila[0].toUpperCase() : "";
+        const supervisor = fila[1];
+
+        if (sector === sectorActivo && supervisor) {
+            const option = document.createElement('option');
+            option.value = supervisor;
+            option.textContent = supervisor;
+            selectSupervisor.appendChild(option);
+        }
+    });
+}
+
+
 function initMapPoda() {
     if (mapP) mapP.remove();
     mapP = L.map('map-poda').setView([14.65, -86.21], 15);
@@ -227,7 +273,7 @@ function marcarGPS(tipo) {
         if (markerInicial) mapP.removeLayer(markerInicial);
         
         // Creamos el marcador fijo VERDE
-        markerInicial = L.marker([latIni, lngIni], { icon: greenIcon })
+        markerInicial = L.marker([latIni, lngIni], { icon: greenIcon, zIndexOffset: 1000 })
             .addTo(mapP)
             .bindPopup("<b>Punto Inicial Guardado</b>");
             
@@ -240,28 +286,9 @@ function marcarGPS(tipo) {
         if (markerFinal) mapP.removeLayer(markerFinal);
         
         // Creamos el marcador fijo ROJO
-        // Se desplaza ligeramente para evitar que el marcador verde capture el mouse
-        const offsetLat = latFin + 0.00003;
-        const offsetLng = lngFin + 0.00003;
-
-        markerFinal = L.marker([offsetLat, offsetLng], {
-            icon: redIcon,
-            draggable: true,
-            zIndexOffset: 1000
-        })
+        markerFinal = L.marker([latFin, lngFin], { icon: redIcon, draggable: true, zIndexOffset: 2000 })
             .addTo(mapP)
             .bindPopup("<b>Punto Final Guardado</b>");
-
-        // Actualiza coordenadas reales al mover el marcador final
-        markerFinal.on('dragend', function(e) {
-            const pos = e.target.getLatLng();
-            latFin = pos.lat;
-            lngFin = pos.lng;
-            gpsFin = latFin + ", " + lngFin;
-
-            document.getElementById('coords-display').innerText =
-                `Inicial: ${gpsIni}\nFinal: ${gpsFin}`;
-        });
     }
     
     // Mantiene tu etiqueta de texto original abajo del mapa actualizada
