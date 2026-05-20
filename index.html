@@ -93,9 +93,17 @@
     		<input type="text" id="pago-trans" placeholder="Transporte" oninput="formatearMoneda(this)">
 		</div>
 
-        <label>Responsables:</label>
-        <input type="text" id="resp-super" placeholder="Responsable Supervisión">
-        <input type="text" id="resp-activ" placeholder="Responsable Actividades Contratista">
+        <div class="input-group">
+    		<label for="campo-encargado"><i class="fa-solid fa-user-tie"></i> RESPONSABLE DE SUPERVISIÓN</label>
+   			<select id="campo-encargado" required>
+       		 	<option value="">Esperando asignación de sector...</option>
+    	</select>
+		</div>
+
+		<div class="input-group">
+    		<label for="resp-activ"><i class="fa-solid fa-briefcase"></i> RESPONSABLE ACTIVIDADES CONTRATISTA</label>
+   			 <input type="text" id="resp-activ" placeholder="Escriba el nombre del contratista" required>
+		</div>
 
         <label>Fotos Grupo e Identidades:</label>
         <div class="grid-2">
