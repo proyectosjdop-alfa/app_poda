@@ -58,13 +58,11 @@ function validarLogin() {
         document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
         initMapPoda();
         
-        // Cargar los circuitos filtrados por el sector que acaba de ingresar
-        cargarCircuitosDesdeSheets(); // Carga el menú desplegable de circuitos
+        // 1. Primero cargamos los circuitos
+        cargarCircuitosDesdeSheets(); 
         
-        // ========================================================
-        // 🔥 MODIFICACIÓN 1: FILTRAR LOS SUPERVISORES AL ENTRAR
-        // ========================================================
-        filtrarSupervisoresPorSector(); 
+        // 2. Ejecutamos la descarga y el filtrado en el orden correcto
+        descargarSupervisoresDesdeSheet(); 
                     
     } else {
         document.getElementById('login-error').style.display = 'block';
@@ -131,8 +129,16 @@ async function descargarSupervisoresDesdeSheet() {
             }
         }
         console.log("Supervisores precargados con éxito:", listaSupervisoresGlobal.length);
+        
+        // ========================================================
+        // 🔥 ESTA LÍNEA ES CRÍTICA: Filtra los datos apenas se descargan
+        // ========================================================
+        filtrarSupervisoresPorSector(); 
+
     } catch (error) {
         console.error("No se pudo precargar la lista de supervisores:", error);
+        // Si hay error de red, activa el plan B manual de inmediato
+        convertirSelectEnInputManual();
     }
 }
 
