@@ -57,9 +57,14 @@ function validarLogin() {
         document.getElementById('form-poda-container').style.display = 'block';
         document.getElementById('user-display').innerText = "Sector: " + sectorActivo;
         initMapPoda();
+        
         // Cargar los circuitos filtrados por el sector que acaba de ingresar
-        cargarCircuitosDesdeSheets(); // Carga el menú desplegable
-        descargarSupervisoresDesdeSheet(); // Carga el menú desplegable
+        cargarCircuitosDesdeSheets(); // Carga el menú desplegable de circuitos
+        
+        // ========================================================
+        // 🔥 MODIFICACIÓN 1: FILTRAR LOS SUPERVISORES AL ENTRAR
+        // ========================================================
+        filtrarSupervisoresPorSector(); 
                     
     } else {
         document.getElementById('login-error').style.display = 'block';
