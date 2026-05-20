@@ -59,6 +59,7 @@ function validarLogin() {
         initMapPoda();
         // Cargar los circuitos filtrados por el sector que acaba de ingresar
         cargarCircuitosDesdeSheets(); // Carga el menú desplegable
+        descargarSupervisoresDesdeSheet(); // Carga el menú desplegable
                     
     } else {
         document.getElementById('login-error').style.display = 'block';
@@ -85,6 +86,97 @@ async function cargarCircuitosDesdeSheets() {
     } catch (error) {
         console.error("Error al conectar con Google Sheets:", error);
         alert("No se pudo cargar la lista de circuitos automáticamente. Por favor comprueba tu conexión.");
+    }
+}
+// =========================================================================
+// CONTROL DE RESPONSABLES DE SUPERVISIÓN DINÁMICOS POR SECTOR
+// =========================================================================
+
+// URL de la pestaña de supervisores (gid=464847370) publicada como CSV
+const URL_SUPERVISORES_SHEET = "https://docs.google.com/spreadsheets/d/15FfY5O9CXIBA0RUcwqJMqHLbrOFRmu4ssgZ9xhPa44A/pub?gid=464847370&single=true&output=csv";
+
+// Arreglo global para almacenar todos los supervisores descargados
+var listaSupervisoresGlobal = [];
+
+// Descargar la base de datos de supervisores en bruto desde Google Sheets
+async function descargarSupervisoresDesdeSheet() {
+    try {
+        const respuesta = await fetch(URL_SUPERVISORES_SHEET);
+        if (!respuesta.ok) throw new Error("Error de conexión con la base de datos.");
+        
+        const textoCSV = await respuesta.text();
+        const lineas = textoCSV.split(/\r?\n/);
+        
+        listaSupervisoresGlobal = []; // Limpiar por seguridad
+        
+        // Empezamos en i = 1 para saltarnos los encabezados (Sector, Responsable)
+        for (let i = 1; i < lineas.length; i++) {
+            const fila = lineas[i].trim();
+            if (fila) {
+                // Separar Columna A (Sector) y Columna B (Responsable)
+                const columnas = fila.split(",");
+                if (columnas.length >= 2) {
+                    const sector = columnas[0].replace(/"/g, "").trim().toUpperCase();
+                    const nombre = columnas[1].replace(/"/g, "").trim().toUpperCase();
+                    
+                    if (sector && nombre) {
+                        listaSupervisoresGlobal.push({ sector: sector, nombre: nombre });
+                    }
+                }
+            }
+        }
+        console.log("Supervisores precargados con éxito:", listaSupervisoresGlobal.length);
+    } catch (error) {
+        console.error("No se pudo precargar la lista de supervisores:", error);
+    }
+}
+
+// Función que FILTRA e INYECTA los nombres en el menú desplegable según el sector activo
+function filtrarSupervisoresPorSector() {
+    const selectorEncargado = document.getElementById("campo-encargado");
+    if (!selectorEncargado) return;
+    
+    // Si la descarga falló o está vacía, habilitamos el plan de contingencia manual
+    if (listaSupervisoresGlobal.length === 0) {
+        selectorEncargado.innerHTML = '<option value="">-- ESCRIBA MANUALMENTE (ERROR DE RED) --</option>';
+        convertirSelectEnInputManual();
+        return;
+    }
+    
+    // Limpiar el selector y poner la opción instructiva por defecto
+    selectorEncargado.innerHTML = '<option value="">-- SELECCIONE RESPONSABLE --</option>';
+    
+    // Validamos el sector activo en mayúsculas
+    const sectorFiltrar = sectorActivo.trim().toUpperCase();
+    const filtrados = listaSupervisoresGlobal.filter(sup => sup.sector === sectorFiltrar);
+    
+    if (filtrados.length === 0) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = `NO HAY SUPERVISORES EN: ${sectorFiltrar}`;
+        selectorEncargado.appendChild(option);
+    } else {
+        // Inyectar únicamente los que pertenecen al sector
+        filtrados.forEach(sup => {
+            const option = document.createElement("option");
+            option.value = sup.nombre;
+            option.textContent = sup.nombre;
+            selectorEncargado.appendChild(option);
+        });
+    }
+}
+
+// Convierte el select en input tradicional de texto por si falla internet en el campo
+function convertirSelectEnInputManual() {
+    const selectorEncargado = document.getElementById("campo-encargado");
+    if (selectorEncargado && selectorEncargado.tagName === "SELECT") {
+        const padre = selectorEncargado.parentNode;
+        const inputAlternativo = document.createElement("input");
+        inputAlternativo.type = "text";
+        inputAlternativo.id = "campo-encargado";
+        inputAlternativo.placeholder = "Nombre del Responsable";
+        inputAlternativo.required = true;
+        padre.replaceChild(inputAlternativo, selectorEncargado);
     }
 }
 
